@@ -9,7 +9,8 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import type { Edition, EditionMeta, Story } from "./types";
-import { editionIdFromFilename, parseEdition, stripSourceSuffix } from "./parser";
+import { editionIdFromFilename, parseEdition } from "./parser";
+import { rankStories } from "./importance";
 
 const EDITIONS_DIR = path.join(process.cwd(), "content", "editions");
 
@@ -25,17 +26,22 @@ function readEditionIds(): string[] {
 }
 
 let editionCache: Edition[] | null = null;
+// Cache only for the production build (the static export is generated once).
+// In dev we re-read every request so a freshly-synced edition appears on refresh
+// without restarting the server — this is what makes the auto-ingest pipeline
+// feel live. See scripts/watch-editions.mjs.
+const CACHE_ENABLED = process.env.NODE_ENV === "production";
 
 /** Load and parse every edition, sorted newest-first. Cached per build. */
 export function getAllEditions(): Edition[] {
-  if (editionCache) return editionCache;
+  if (CACHE_ENABLED && editionCache) return editionCache;
 
   const editions = readEditionIds().map((id) => {
     const file = path.join(EDITIONS_DIR, `edition-${id}.md`);
     return parseEdition(fs.readFileSync(file, "utf8"), id);
   });
 
-  editionCache = editions;
+  if (CACHE_ENABLED) editionCache = editions;
   return editions;
 }
 
@@ -82,16 +88,23 @@ export function getStory(
 /** Lightweight metadata for archive/index listings, newest-first. */
 export function getEditionMetas(): EditionMeta[] {
   return getAllEditions().map((edition) => {
-    const lead = edition.stories[0];
+    // Order the preview headlines by importance so the archive card mirrors the
+    // front page rather than raw file order.
+    const ranked = rankStories(edition.stories);
+    const headlines = ranked.map((r) => r.story.headline);
     return {
       id: edition.id,
       date: edition.date,
       humanDate: edition.humanDate,
       storyCount: edition.stories.length,
       issueNumber: getIssueNumber(edition.id),
-      leadHeadline: lead ? stripSourceSuffix(lead.rawHeadline) : "—",
+      leadHeadline: headlines[0] ?? "—",
+      topHeadlines: headlines.slice(0, 3),
       debateCount: edition.stories.filter((s) => s.mode === "debate").length,
       reportCount: edition.stories.filter((s) => s.mode === "report").length,
+      primaryCount: edition.stories.filter(
+        (s) => s.mode === "report" || s.claims.some((c) => c.primarySourceBacked),
+      ).length,
     };
   });
 }

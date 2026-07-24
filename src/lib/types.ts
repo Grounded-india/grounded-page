@@ -26,6 +26,12 @@ export interface StoryBadges {
   claimsKept: number;
   /** Present in report mode only. */
   verified?: number;
+  /**
+   * Optional 0-100 importance score, if the backend ever stamps one in the
+   * badge line (e.g. "· impact 87"). When present it overrides the frontend's
+   * derived score. See `lib/importance.ts`.
+   */
+  impact?: number;
 }
 
 export interface Story {
@@ -72,6 +78,10 @@ export interface EditionMeta {
   /** Chronological issue number (oldest edition === No. 1). */
   issueNumber: number;
   leadHeadline: string;
+  /** Up to three top headlines for a front-page preview card. */
+  topHeadlines: string[];
   debateCount: number;
   reportCount: number;
+  /** Stories carrying a primary/official source (report mode or backed claim). */
+  primaryCount: number;
 }

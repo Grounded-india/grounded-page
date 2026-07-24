@@ -146,6 +146,8 @@ function parseBadges(badgeBody: string): { mode: Mode; badges: StoryBadges } {
   let claimsKept = 0;
   let verified: number | undefined;
 
+  let impact: number | undefined;
+
   for (const token of tokens) {
     const s = token.match(/(\d+)\s+sources?/i);
     if (s) sources = Number(s[1]);
@@ -153,10 +155,14 @@ function parseBadges(badgeBody: string): { mode: Mode; badges: StoryBadges } {
     if (c) claimsKept = Number(c[1]);
     const v = token.match(/(\d+)\s+verified/i);
     if (v) verified = Number(v[1]);
+    // Optional explicit importance score, if the backend adds one later.
+    const i = token.match(/(?:impact|priority|score)\s*[:=]?\s*(\d+)/i);
+    if (i) impact = Number(i[1]);
   }
 
   const badges: StoryBadges = { sources, claimsKept };
   if (verified !== undefined) badges.verified = verified;
+  if (impact !== undefined) badges.impact = impact;
   return { mode, badges };
 }
 
