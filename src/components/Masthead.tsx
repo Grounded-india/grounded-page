@@ -101,8 +101,8 @@ export function Masthead({
               {issueNumber ? `No. ${issueNumber} · ` : ""}Fact-grounded ·
               Auditable
             </p>
-            <p className="font-display text-[0.95rem] italic text-sepia">
-              “Every claim, a citation.”
+            <p className="font-display text-[1rem] italic text-sepia">
+              Someone has to keep you grounded.
             </p>
           </div>
           <hr className="rule-hair mt-3" />
