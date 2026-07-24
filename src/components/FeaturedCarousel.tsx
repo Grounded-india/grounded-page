@@ -60,8 +60,11 @@ export function FeaturedCarousel({
       aria-roledescription="carousel"
       aria-label="Featured dispatches"
       className="relative"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      // Note: we deliberately do NOT pause on mouse hover — the hero covers the
+      // whole top of the page, so hover-pausing made the progress bar freeze
+      // "randomly" whenever the cursor rested there. Keyboard focus still pauses
+      // (so controls don't shift under a tabbing user), and the ⏸ button is the
+      // explicit stop mechanism.
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
