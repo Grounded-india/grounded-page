@@ -1,0 +1,320 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   GROUNDED — vintage broadsheet stylesheet
+   Ink on aged paper. No gradients-as-decor, no glass, no neon. Everything is
+   meant to read as a printed sheet, not a screen.
+   ========================================================================== */
+
+@layer base {
+  :root {
+    --paper: #f3ecdd;
+    --paper-deep: #e7dcc4;
+    --ink: #211c15;
+    --sepia: #6b5d4a;
+    --oxblood: #7b2d26;
+    --gold: #9a7b3f;
+    --hair: rgba(33, 28, 21, 0.22);
+    --hair-soft: rgba(33, 28, 21, 0.14);
+  }
+
+  html {
+    color: var(--ink);
+    background-color: var(--paper);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+  }
+
+  body {
+    font-family: theme("fontFamily.body");
+    color: var(--ink);
+    background-color: var(--paper);
+    line-height: 1.68;
+    min-height: 100vh;
+  }
+
+  /* Paper texture — a single fixed sheet behind everything. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background-image: url("/textures/paper.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    /* the master scan is portrait; cover keeps it filling any viewport */
+  }
+
+  /* Cream wash + gentle vignette so dense text stays legible over the mottling. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 120% 90% at 50% 30%,
+        rgba(244, 238, 224, 0.62) 0%,
+        rgba(243, 236, 221, 0.34) 45%,
+        rgba(221, 208, 180, 0.12) 100%
+      );
+    mix-blend-mode: normal;
+  }
+
+  ::selection {
+    background: rgba(123, 45, 38, 0.18);
+    color: var(--ink);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: theme("fontFamily.display");
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.04;
+    text-wrap: balance;
+  }
+
+  /* Focus visibility for keyboard users, styled to fit the paper. */
+  a:focus-visible,
+  button:focus-visible {
+    outline: 2px solid var(--oxblood);
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  /* --- Rules & ornaments ---------------------------------------------- */
+  .rule-hair {
+    border: 0;
+    border-top: 1px solid var(--hair);
+  }
+  .rule-hair-soft {
+    border: 0;
+    border-top: 1px solid var(--hair-soft);
+  }
+
+  /* Double rule under the nameplate: heavy ink line + fine oxblood line. */
+  .rule-double {
+    border: 0;
+    height: 6px;
+    background:
+      linear-gradient(var(--ink), var(--ink)) top / 100% 2px no-repeat,
+      linear-gradient(var(--oxblood), var(--oxblood)) bottom / 100% 1px no-repeat;
+  }
+  .rule-thick {
+    border: 0;
+    border-top: 2px solid var(--ink);
+  }
+
+  /* --- Small-caps kickers & section labels ---------------------------- */
+  .kicker {
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--sepia);
+  }
+
+  .section-label {
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink);
+    display: inline-block;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  /* --- Mode stamps (letterpress) -------------------------------------- */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-weight: 700;
+    font-size: 0.62rem;
+    padding: 0.28rem 0.6rem 0.24rem;
+    border: 1.5px solid currentColor;
+    line-height: 1;
+  }
+  .stamp-debate {
+    color: var(--oxblood);
+    border-color: var(--oxblood);
+    transform: rotate(-2.2deg);
+    /* faint uneven-ink look */
+    box-shadow: inset 0 0 0 0.5px rgba(123, 45, 38, 0.25);
+    opacity: 0.92;
+  }
+  .stamp-report {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  /* --- Body prose ----------------------------------------------------- */
+  .prose-paper {
+    font-family: theme("fontFamily.body");
+    color: var(--ink);
+    font-size: 1.02rem;
+    line-height: 1.72;
+  }
+  .prose-paper p {
+    margin: 0 0 1rem;
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+  .prose-paper p:last-child {
+    margin-bottom: 0;
+  }
+  .prose-paper strong {
+    font-weight: 700;
+  }
+  .prose-paper em {
+    font-style: italic;
+  }
+  .prose-paper a {
+    color: var(--oxblood);
+    text-decoration: none;
+    background-image: linear-gradient(var(--oxblood), var(--oxblood));
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.25s ease;
+  }
+  .prose-paper a:hover {
+    background-size: 100% 1px;
+  }
+  .prose-paper ul {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+  }
+  .prose-paper li {
+    position: relative;
+    padding-left: 1.15rem;
+    margin-bottom: 0.5rem;
+    text-align: left;
+  }
+  .prose-paper li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: var(--sepia);
+  }
+  .prose-paper blockquote {
+    border-left: 2px solid var(--hair);
+    padding-left: 1rem;
+    font-style: italic;
+    color: var(--sepia);
+  }
+
+  /* Newspaper column-flow for teaser grids: real vertical column rules. */
+  .broadsheet-cols {
+    column-count: 1;
+    column-gap: 2.4rem;
+    column-rule: 1px solid var(--hair-soft);
+  }
+  @media (min-width: 640px) {
+    .broadsheet-cols {
+      column-count: 2;
+    }
+  }
+  @media (min-width: 1024px) {
+    .broadsheet-cols {
+      column-count: 3;
+    }
+  }
+  .broadsheet-cols > * {
+    break-inside: avoid;
+  }
+
+  /* Drop cap for a lead paragraph (targets react-markdown's first <p>). */
+  .drop-cap p:first-of-type::first-letter {
+    font-family: theme("fontFamily.display");
+    font-weight: 800;
+    float: left;
+    font-size: 4.6rem;
+    line-height: 0.72;
+    padding: 0.32rem 0.55rem 0 0;
+    color: var(--ink);
+  }
+
+  /* Restrained papery source tag. */
+  .source-tag {
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.66rem;
+    color: var(--sepia);
+    border: 1px solid var(--hair);
+    padding: 0.12rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  /* Nav links — old-style underline on hover. */
+  .nav-link {
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.72rem;
+    color: var(--ink);
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  .nav-link:hover,
+  .nav-link[data-active="true"] {
+    border-bottom-color: var(--oxblood);
+  }
+
+  /* Old-style link used inside articles/teasers. */
+  .ink-link {
+    color: var(--ink);
+    text-decoration: none;
+    background-image: linear-gradient(var(--ink), var(--ink));
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.25s ease;
+  }
+  .ink-link:hover {
+    background-size: 100% 1px;
+  }
+}
+
+@layer utilities {
+  .headline-shadow {
+    /* the faintest ink bleed — never a modern drop shadow */
+    text-shadow: 0 0.5px 0 rgba(33, 28, 21, 0.06);
+  }
+  .center-rule {
+    border-left: 1px solid var(--hair);
+  }
+}
+
+/* Respect reduced-motion everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
