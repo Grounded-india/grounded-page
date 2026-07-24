@@ -222,6 +222,18 @@
     color: var(--sepia);
   }
 
+  /* Provenance note for stub stories (a single title-only primary source):
+     a quiet, ruled aside in place of the backend's machine boilerplate. */
+  .provenance-note {
+    font-family: theme("fontFamily.body");
+    font-style: italic;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--sepia);
+    border-left: 2px solid var(--hair);
+    padding-left: 1rem;
+  }
+
   /* Newspaper column-flow for teaser grids: real vertical column rules. */
   .broadsheet-cols {
     column-count: 1;
