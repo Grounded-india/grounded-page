@@ -56,7 +56,7 @@ export function Masthead({
           <span className="kicker !text-[0.6rem]">
             Vol. I{issueNumber ? ` · No. ${issueNumber}` : ""}
           </span>
-          <span className="kicker !text-[0.6rem]">New Delhi · Gratis</span>
+          <span className="kicker !text-[0.6rem]">The Grounded Times</span>
         </div>
       )}
 

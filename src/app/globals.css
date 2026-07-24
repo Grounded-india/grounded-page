@@ -295,6 +295,53 @@
   .ink-link:hover {
     background-size: 100% 1px;
   }
+
+  /* --- Featured carousel (rotating front-page banner) ----------------- */
+  .ctrl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--hair);
+    color: var(--ink);
+    font-size: 0.85rem;
+    line-height: 1;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease,
+      background-color 0.2s ease;
+  }
+  .ctrl-btn:hover {
+    border-color: var(--oxblood);
+    color: var(--oxblood);
+  }
+
+  .featured-progress {
+    height: 2px;
+    width: 100%;
+    background: var(--hair-soft);
+    overflow: hidden;
+  }
+  .featured-progress > span {
+    display: block;
+    height: 100%;
+    width: 100%;
+    background: var(--oxblood);
+    transform: scaleX(0);
+    transform-origin: left center;
+    animation-name: progress-fill;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+  @keyframes progress-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
 }
 
 @layer utilities {
