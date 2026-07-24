@@ -74,10 +74,16 @@ export function storySourceTier(story: Story): SourceTier {
 
 const TIER_BONUS: Record<SourceTier, number> = { primary: 20, wire: 10, social: 3 };
 
-/** A "brief" is a terse, single-source, single-claim item (a wire snippet or a
- *  raw official filing) — it belongs in an "In Brief" rail, not a headline slot. */
+/** A "brief" is a terse, single-source item with no real body of its own (a lone
+ *  wire snippet or a raw official filing) — it belongs in an "In Brief" rail, not
+ *  a headline slot. A full Report narrative or a constructed Debate always counts
+ *  as substance, so content-rich stories are never demoted to briefs. */
 function isThin(story: Story): boolean {
-  return story.badges.sources <= 1 && story.badges.claimsKept <= 1;
+  const hasReport = (story.report?.trim().length ?? 0) > 0;
+  const hasDebate =
+    !!story.debate && story.debate.turns.some((t) => t.body.trim().length > 0);
+  if (hasReport || hasDebate) return false;
+  return story.claims.length < 2 && story.badges.sources <= 1;
 }
 
 /** Composite 0-100 importance score for a single story. */

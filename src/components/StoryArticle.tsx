@@ -73,16 +73,26 @@ export function StoryArticle({
 
       {/* Context — real body when we have it; otherwise a clean provenance note
           for stub stories (a single title-only primary source) instead of the
-          backend's "reconstructed from N source item(s)…" boilerplate. */}
+          backend's "reconstructed from N source item(s)…" boilerplate. When a
+          full Report follows, Context reads as a brief standfirst (no drop cap)
+          and the drop cap moves to the Report body below. */}
       {hasContextBody(story.context) ? (
         <section className="mt-8 max-w-[44rem]">
           <SectionLabel>Context</SectionLabel>
-          <Prose markdown={body} dropCap />
+          <Prose markdown={body} dropCap={!story.report} />
         </section>
-      ) : (
+      ) : story.report ? null : (
         <p className="provenance-note mt-8 max-w-[44rem]">
           {reconstructionNote(story)}
         </p>
+      )}
+
+      {/* Full report narrative (newer report editions) */}
+      {story.report && (
+        <section className="mt-10 max-w-[44rem]">
+          <SectionLabel>Report</SectionLabel>
+          <Prose markdown={story.report} dropCap />
+        </section>
       )}
 
       {/* Debate OR What we know */}

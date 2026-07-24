@@ -234,6 +234,78 @@
     padding-left: 1rem;
   }
 
+  /* --- "The debate" — threaded op-ed exchange ------------------------- */
+  .debate-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+  .debate-turn {
+    position: relative;
+    padding-left: 1.15rem;
+    border-left: 2px solid var(--hair);
+  }
+  .debate-turn[data-side="0"] {
+    border-left-color: var(--ink);
+  }
+  .debate-turn[data-side="1"] {
+    border-left-color: var(--oxblood);
+  }
+  @media (min-width: 768px) {
+    /* Step the reply in so the back-and-forth reads at a glance. */
+    .debate-turn[data-side="1"] {
+      margin-left: 2.5rem;
+    }
+  }
+  .debate-turn-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    margin-bottom: 0.5rem;
+  }
+  .debate-turn-mark {
+    font-family: theme("fontFamily.display");
+    font-weight: 800;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+  .debate-turn[data-side="0"] .debate-turn-mark {
+    color: var(--ink);
+    opacity: 0.32;
+  }
+  .debate-turn[data-side="1"] .debate-turn-mark {
+    color: var(--oxblood);
+    opacity: 0.5;
+  }
+  .debate-speaker {
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .debate-turn[data-side="1"] .debate-speaker {
+    color: var(--oxblood);
+  }
+  .debate-bottomline {
+    margin-top: 0.4rem;
+    padding: 1.1rem 1.3rem;
+    border-top: 2px solid var(--ink);
+    border-bottom: 1px solid var(--hair);
+    background: rgba(247, 241, 228, 0.5);
+  }
+  .debate-bottomline-label {
+    display: block;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: var(--sepia);
+    margin-bottom: 0.5rem;
+  }
+
   /* Newspaper column-flow for teaser grids: real vertical column rules. */
   .broadsheet-cols {
     column-count: 1;

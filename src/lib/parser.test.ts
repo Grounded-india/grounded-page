@@ -71,34 +71,42 @@ describe("parseEdition — golden fixture edition-2026-07-21.md", () => {
   describe("debate story with an EMPTY Side B (story 1)", () => {
     const story = edition.stories[0];
 
-    it("is a debate with both sides parsed", () => {
+    it("is a debate parsed into ordered turns", () => {
       expect(story.mode).toBe("debate");
       expect(story.debate).toBeDefined();
+      expect(story.debate!.turns).toHaveLength(2);
     });
 
-    it("keeps the Side A label and body", () => {
-      expect(story.debate!.sideA.label).toBe("Supporters' account");
-      expect(story.debate!.sideA.body.length).toBeGreaterThan(50);
+    it("keeps Side A as the first turn (side 0) with a body", () => {
+      const a = story.debate!.turns[0];
+      expect(a.side).toBe(0);
+      expect(a.speaker).toBe("Supporters' account");
+      expect(a.body.length).toBeGreaterThan(50);
     });
 
-    it("keeps the Side B label but an EMPTY body (degrades gracefully)", () => {
-      expect(story.debate!.sideB.label).toBe("Skeptics' account");
-      expect(story.debate!.sideB.body).toBe("");
+    it("keeps Side B as an empty second turn (degrades gracefully)", () => {
+      const b = story.debate!.turns[1];
+      expect(b.side).toBe(1);
+      expect(b.speaker).toBe("Skeptics' account");
+      expect(b.body).toBe("");
     });
   });
 
   describe("debate story with a populated Side B (story 4)", () => {
     const story = edition.stories[3];
 
-    it("parses both side bodies", () => {
-      expect(story.debate!.sideA.label).toBe("What is being reported");
-      expect(story.debate!.sideB.label).toBe("Why it remains unverified");
-      expect(story.debate!.sideB.body).toContain("No primary or official source");
+    it("parses both side turns", () => {
+      const [a, b] = story.debate!.turns;
+      expect(a.speaker).toBe("What is being reported");
+      expect(a.side).toBe(0);
+      expect(b.speaker).toBe("Why it remains unverified");
+      expect(b.side).toBe(1);
+      expect(b.body).toContain("No primary or official source");
     });
 
     it("humanizes inline citations in the debate body", () => {
-      expect(story.debate!.sideA.body).toContain("(Reuters India)");
-      expect(story.debate!.sideA.body).not.toContain("(reuters_india)");
+      expect(story.debate!.turns[0].body).toContain("(Reuters India)");
+      expect(story.debate!.turns[0].body).not.toContain("(reuters_india)");
     });
 
     it("keeps an embedded em-dash inside a claim's text", () => {
@@ -112,9 +120,10 @@ describe("parseEdition — golden fixture edition-2026-07-21.md", () => {
   describe("report story (story 6) with primary-source-backed claims", () => {
     const story = edition.stories[5];
 
-    it("uses 'What we know' claims and has no debate", () => {
+    it("uses 'What we know' claims and has no debate or report body", () => {
       expect(story.mode).toBe("report");
       expect(story.debate).toBeUndefined();
+      expect(story.report).toBeUndefined();
       expect(story.claims).toHaveLength(3);
     });
 
@@ -168,6 +177,75 @@ describe("parseEdition — golden fixture edition-2026-07-21.md", () => {
   });
 });
 
+describe("parseEdition — new-format edition-2026-07-23.md", () => {
+  const NEW_ID = "2026-07-23";
+  const md = fs.readFileSync(
+    path.join(process.cwd(), "content", "editions", `edition-${NEW_ID}.md`),
+    "utf8",
+  );
+  const edition = parseEdition(md, NEW_ID);
+  const byIndex = (i: number) => edition.stories.find((s) => s.index === i)!;
+
+  it("reads the header and all 17 stories", () => {
+    expect(edition.humanDate).toBe("Thursday, 23 July 2026");
+    expect(edition.storyCount).toBe(17);
+    expect(edition.stories).toHaveLength(17);
+  });
+
+  it("captures the full '### Report' narrative for a report story", () => {
+    const s = byIndex(1); // PM announces fast-track courts
+    expect(s.mode).toBe("report");
+    expect(s.debate).toBeUndefined();
+    expect(s.report).toBeDefined();
+    expect(s.report!.length).toBeGreaterThan(400);
+    expect(s.report).toContain("fast-track court");
+  });
+
+  it("humanizes inline slugs and doesn't bleed the Sources line into the report", () => {
+    const s = byIndex(1);
+    expect(s.report).toContain("(PIB)");
+    expect(s.report).not.toContain("(pib)");
+    expect(s.report).not.toContain("pib-response");
+    expect(s.report).not.toContain("reddit_news");
+    expect(s.report).not.toContain("**Sources:**");
+    expect(s.report).not.toContain("Public discussion");
+  });
+
+  it("parses a multi-turn debate with rebuttals, closings and a bottom line", () => {
+    const s = byIndex(2); // Anantnag demolitions
+    expect(s.mode).toBe("debate");
+    const d = s.debate!;
+    expect(d.turns.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(d.turns.map((t) => t.side))).toEqual(new Set([0, 1]));
+    expect(d.turns.some((t) => /\(closing\)/i.test(t.speaker))).toBe(true);
+    expect(d.bottomLine).toBeDefined();
+    expect(d.bottomLine).toMatch(/load-bearing/i);
+  });
+
+  it("humanizes inline slugs inside debate turns", () => {
+    const joined = byIndex(2)
+      .debate!.turns.map((t) => t.body)
+      .join("\n");
+    expect(joined).toContain("The Hindu");
+    expect(joined).not.toContain("the_hindu");
+  });
+
+  it("keeps 'Grounded points' primary-source-backed claims on a debate", () => {
+    const s = byIndex(3); // NDA allies — carries PIB primary-backed claims
+    expect(s.claims.length).toBeGreaterThan(0);
+    expect(s.claims.some((c) => c.primarySourceBacked)).toBe(true);
+  });
+
+  it("matches the backend TOC anchor slugs", () => {
+    expect(byIndex(1).slug).toBe(
+      "1-prime-minister-announces-fast-track-courts-to-handle-paper-leak-cases",
+    );
+    expect(byIndex(3).slug).toBe(
+      "3-nda-allies-tdp-and-jdu-tread-cautiously-amid-neet-paper-leak-protests",
+    );
+  });
+});
+
 describe("unit helpers", () => {
   it("editionIdFromFilename extracts the date or returns null", () => {
     expect(editionIdFromFilename("edition-2026-07-21.md")).toBe("2026-07-21");
@@ -217,5 +295,13 @@ describe("unit helpers", () => {
     const out = humanizeInlineCitations(input);
     expect(out).toContain("(AP India)");
     expect(out).toContain("(AP)"); // untouched
+  });
+
+  it("humanizes the new reddit_news and hyphenated pib-response slugs", () => {
+    expect(humanizeOutlet("reddit_news")).toBe("Reddit News");
+    expect(humanizeOutlet("pib-response")).toBe("PIB");
+    expect(humanizeInlineCitations("assured relief (pib-response) today")).toContain(
+      "(PIB)",
+    );
   });
 });

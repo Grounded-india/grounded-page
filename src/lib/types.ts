@@ -14,11 +14,27 @@ export interface Claim {
   primarySourceBacked: boolean;
 }
 
-export interface Side {
-  /** e.g. "Supporters' account", "What is being reported". */
-  label: string;
-  /** Markdown body. MAY be an empty string (Side B is often absent). */
+export interface DebateTurn {
+  /**
+   * Display label for the speaker. Old format: a side descriptor like
+   * "Supporters' account". New format: the named party, including any turn
+   * marker, e.g. "J&K CM Omar Abdullah (closing)".
+   */
+  speaker: string;
+  /** Markdown body. MAY be an empty string (a side that couldn't be built). */
   body: string;
+  /** 0 or 1 — which of the (up to two) parties, for alternating layout. */
+  side: number;
+}
+
+export interface Debate {
+  /**
+   * The exchange in source order. Old editions carry two turns (Side A / Side B);
+   * new editions carry a threaded back-and-forth (openings, rebuttals, closings).
+   */
+  turns: DebateTurn[];
+  /** Optional neutral synthesis rendered after the exchange ("Bottom line"). */
+  bottomLine?: string;
 }
 
 export interface StoryBadges {
@@ -49,8 +65,13 @@ export interface Story {
   badges: StoryBadges;
   /** Context prose as Markdown (always present). */
   context: string;
+  /**
+   * Full "### Report" narrative (report mode, newer editions) as Markdown.
+   * Older stub reports have no report body and rely on `claims` instead.
+   */
+  report?: string;
   /** Present when mode === "debate". */
-  debate?: { sideA: Side; sideB: Side };
+  debate?: Debate;
   /** "Grounded points" (debate) or "What we know" (report). */
   claims: Claim[];
   /** Per-story cited outlets, already human-readable. */

@@ -14,9 +14,14 @@ const KNOWN_OUTLETS: Record<string, string> = {
   prs_india: "PRS India",
   prsindia: "PRS India",
   pib: "PIB",
+  // The backend cites PIB fact-check "responses" under a hyphenated slug; both
+  // resolve to the same bureau for the reader.
+  pib_response: "PIB",
+  "pib-response": "PIB",
   rbi: "RBI",
   supreme_court: "Supreme Court",
   google_news_india: "Google News India",
+  reddit_news: "Reddit News",
   indian_express: "Indian Express",
   the_times_of_india: "The Times of India",
   ndtv: "NDTV",

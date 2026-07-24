@@ -18,9 +18,10 @@
  */
 import type {
   Claim,
+  Debate,
+  DebateTurn,
   Edition,
   Mode,
-  Side,
   Story,
   StoryBadges,
 } from "./types";
@@ -195,35 +196,64 @@ function parseClaims(section: string | undefined): Claim[] {
   return claims;
 }
 
-const SIDE_A_RE = /\*\*Side A\s*[—–-]\s*(.*?)\*\*/;
-const SIDE_B_RE = /\*\*Side B\s*[—–-]\s*(.*?)\*\*/;
+/**
+ * A bold header at the START of a line, capturing the label. Matches both:
+ *   (old) "**Side A — Supporters' account**"  — body on the following lines
+ *   (new) "**J&K CM Omar Abdullah:**"          — body on the SAME line
+ * The trailing `:?[ \t]*` swallows an outside colon and the gap before an
+ * inline body; an inside colon (new format) is captured and stripped below.
+ */
+const TURN_HEADER_RE = /^\*\*\s*(.+?)\s*\*\*\s*:?[ \t]*/gm;
+const SIDE_HEADER_RE = /^Side\s+([AB])\b\s*(?:[—–-]\s*)?(.*)$/i;
+const TURN_MARKER_RE = /\s*\((?:rebuttal|closing|opening|response)\)\s*$/i;
 
-function parseDebate(
-  section: string | undefined,
-): { sideA: Side; sideB: Side } | undefined {
+/**
+ * Parse "### The debate" into an ordered list of {speaker, body, side} turns,
+ * plus an optional "Bottom line" synthesis. Speakers are mapped to two sides in
+ * order of first appearance so rebuttals/closings line up with their opener.
+ */
+function parseDebate(section: string | undefined): Debate | undefined {
   if (!section) return undefined;
-  const a = section.match(SIDE_A_RE);
-  if (!a || a.index === undefined) return undefined;
 
-  const b = section.match(SIDE_B_RE);
-  const aStart = a.index + a[0].length;
-  const bIndex = b && b.index !== undefined ? b.index : section.length;
+  const heads = [...section.matchAll(TURN_HEADER_RE)];
+  if (heads.length === 0) return undefined;
 
-  const sideA: Side = {
-    label: a[1].trim(),
-    body: humanizeInlineCitations(section.slice(aStart, bIndex).trim()),
-  };
+  const turns: DebateTurn[] = [];
+  const sideByParty = new Map<string, number>();
+  let bottomLine: string | undefined;
 
-  let sideB: Side = { label: "", body: "" };
-  if (b && b.index !== undefined) {
-    const bStart = b.index + b[0].length;
-    sideB = {
-      label: b[1].trim(),
-      body: humanizeInlineCitations(section.slice(bStart).trim()),
-    };
+  for (let i = 0; i < heads.length; i++) {
+    const head = heads[i];
+    const header = head[1].trim().replace(/:$/, "").trim();
+    const bodyStart = (head.index ?? 0) + head[0].length;
+    const bodyEnd =
+      i + 1 < heads.length ? (heads[i + 1].index ?? section.length) : section.length;
+    const body = humanizeInlineCitations(section.slice(bodyStart, bodyEnd).trim());
+
+    if (/^bottom\s+line\b/i.test(header)) {
+      bottomLine = body;
+      continue;
+    }
+
+    const sideMatch = header.match(SIDE_HEADER_RE);
+    let speaker: string;
+    let side: number;
+    if (sideMatch) {
+      side = sideMatch[1].toUpperCase() === "A" ? 0 : 1;
+      speaker = sideMatch[2].trim();
+    } else {
+      const party = header.replace(TURN_MARKER_RE, "").trim();
+      if (!sideByParty.has(party)) sideByParty.set(party, sideByParty.size % 2);
+      side = sideByParty.get(party) ?? 0;
+      speaker = header;
+    }
+    turns.push({ speaker, body, side });
   }
 
-  return { sideA, sideB };
+  if (turns.length === 0) return undefined;
+  const debate: Debate = { turns };
+  if (bottomLine !== undefined) debate.bottomLine = bottomLine;
+  return debate;
 }
 
 const SECTION_HEADING_RE = /^###\s+(.+?)\s*$/;
@@ -251,6 +281,16 @@ function splitSections(block: string): Map<string, string> {
 }
 
 const SOURCES_RE = /^\*\*Sources:\*\*\s+(.+)$/m;
+
+/**
+ * A `### Report` (or `### What we know`) section is the last one in a story
+ * block, so it absorbs the trailing "**Sources:**" line and any "*Public
+ * discussion…*" signal note. Cut those off so only the prose body remains.
+ */
+function stripTrailingMeta(text: string): string {
+  const idx = text.search(/^\*\*Sources:\*\*/m);
+  return (idx === -1 ? text : text.slice(0, idx)).trim();
+}
 
 function parseSources(block: string): string[] {
   const match = block.match(SOURCES_RE);
@@ -294,6 +334,11 @@ function parseStory(block: string): Story | null {
     mode === "debate" ? sections.get("Grounded points") : sections.get("What we know"),
   );
 
+  // Newer report editions carry a full "### Report" narrative; older stub
+  // reports don't and lean on `claims` instead.
+  const reportBody = stripTrailingMeta(sections.get("Report") ?? "");
+  const report = reportBody ? humanizeInlineCitations(reportBody) : undefined;
+
   const story: Story = {
     index,
     slug: storySlug(index, rawHeadline),
@@ -307,6 +352,7 @@ function parseStory(block: string): Story | null {
     sources: parseSources(block),
   };
 
+  if (report) story.report = report;
   if (debate) story.debate = debate;
   return story;
 }
