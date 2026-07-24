@@ -4,16 +4,13 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { RankedStory } from "@/lib/importance";
+import { cleanDek, storyLede } from "@/lib/content";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
 
 /** How long each featured story holds before the page turns. */
 const INTERVAL_MS = 6500;
-
-function firstParagraph(markdown: string): string {
-  return markdown.split(/\n{2,}/).map((p) => p.trim()).find(Boolean) ?? "";
-}
 
 /**
  * The rotating "front-page banner". It cycles the edition's MOST IMPORTANT
@@ -54,6 +51,8 @@ export function FeaturedCarousel({
   const story = active.story;
   const href = `/story/${date}/${story.slug}`;
   const rotating = count > 1;
+  const dek = cleanDek(story.dek, story.headline);
+  const lede = storyLede(story);
 
   return (
     <section
@@ -124,15 +123,17 @@ export function FeaturedCarousel({
               </h2>
             </Link>
 
-            {story.dek && (
+            {dek && (
               <p className="mt-4 max-w-3xl font-display text-xl italic leading-snug text-sepia">
-                {story.dek}
+                {dek}
               </p>
             )}
 
-            <div className="mt-5 max-w-3xl">
-              <Prose markdown={firstParagraph(story.context)} />
-            </div>
+            {lede && (
+              <div className="mt-5 max-w-3xl">
+                <Prose markdown={lede} />
+              </div>
+            )}
 
             <Link
               href={href}

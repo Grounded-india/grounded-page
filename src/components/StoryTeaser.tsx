@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Story } from "@/lib/types";
+import { cleanDek } from "@/lib/content";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
@@ -69,6 +70,7 @@ export function StoryTeaser({
   score?: number;
 }) {
   const href = `/story/${date}/${story.slug}`;
+  const dek = cleanDek(story.dek, story.headline);
   return (
     <article className="mb-8 break-inside-avoid pt-6">
       <hr className="rule-hair-soft mb-4" />
@@ -83,9 +85,9 @@ export function StoryTeaser({
         </h3>
       </Link>
 
-      {story.dek && (
+      {dek && (
         <p className="mt-2 font-body text-[0.95rem] italic leading-snug text-sepia">
-          {story.dek}
+          {dek}
         </p>
       )}
 

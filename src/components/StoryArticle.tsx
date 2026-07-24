@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Edition, Story } from "@/lib/types";
+import { cleanDek, hasContextBody, reconstructionNote, splitContext } from "@/lib/content";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { SectionLabel } from "./SectionLabel";
@@ -32,6 +33,8 @@ export function StoryArticle({
   next?: Story;
   score?: number;
 }) {
+  const dek = cleanDek(story.dek, story.headline);
+  const { body } = splitContext(story.context);
   return (
     <article className="mx-auto w-full max-w-[62rem] px-5 pb-10 pt-10 sm:px-8">
       {/* Kicker + provenance */}
@@ -51,9 +54,9 @@ export function StoryArticle({
         {story.headline}
       </h1>
 
-      {story.dek && (
+      {dek && (
         <p className="mt-4 max-w-[42rem] font-display text-xl italic leading-snug text-sepia sm:text-2xl">
-          {story.dek}
+          {dek}
         </p>
       )}
 
@@ -68,11 +71,19 @@ export function StoryArticle({
         <hr className="rule-hair flex-1" />
       </div>
 
-      {/* Context */}
-      <section className="mt-8 max-w-[44rem]">
-        <SectionLabel>Context</SectionLabel>
-        <Prose markdown={story.context} dropCap />
-      </section>
+      {/* Context — real body when we have it; otherwise a clean provenance note
+          for stub stories (a single title-only primary source) instead of the
+          backend's "reconstructed from N source item(s)…" boilerplate. */}
+      {hasContextBody(story.context) ? (
+        <section className="mt-8 max-w-[44rem]">
+          <SectionLabel>Context</SectionLabel>
+          <Prose markdown={body} dropCap />
+        </section>
+      ) : (
+        <p className="provenance-note mt-8 max-w-[44rem]">
+          {reconstructionNote(story)}
+        </p>
+      )}
 
       {/* Debate OR What we know */}
       {story.mode === "debate" && story.debate ? (
