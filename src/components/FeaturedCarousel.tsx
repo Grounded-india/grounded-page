@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import type { Story } from "@/lib/types";
+import type { RankedStory } from "@/lib/importance";
 import { ModeStamp } from "./ModeStamp";
+import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
 
 /** How long each featured story holds before the page turns. */
@@ -15,20 +16,21 @@ function firstParagraph(markdown: string): string {
 }
 
 /**
- * A rotating "front-page banner": the lead position auto-advances through the
- * edition's stories with a gentle page-turn, the way a broadsheet's showcase
- * might refresh. Pauses on hover/focus, is fully keyboard-operable, and holds
- * still entirely for reduced-motion readers (who still get every control).
+ * The rotating "front-page banner". It cycles the edition's MOST IMPORTANT
+ * stories (lead + features, chosen by lib/importance.ts) with a gentle
+ * page-turn, the way a broadsheet's showcase might refresh. Pauses on
+ * hover/focus, is fully keyboard-operable, and holds still for reduced-motion
+ * readers (who still get every control).
  */
 export function FeaturedCarousel({
-  stories,
+  items,
   date,
 }: {
-  stories: Story[];
+  items: RankedStory[];
   date: string;
 }) {
   const reduce = useReducedMotion();
-  const count = stories.length;
+  const count = items.length;
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -48,7 +50,8 @@ export function FeaturedCarousel({
 
   if (count === 0) return null;
 
-  const story = stories[Math.min(index, count - 1)];
+  const active = items[Math.min(index, count - 1)];
+  const story = active.story;
   const href = `/story/${date}/${story.slug}`;
   const rotating = count > 1;
 
@@ -63,7 +66,9 @@ export function FeaturedCarousel({
       onBlurCapture={() => setPaused(false)}
     >
       <div className="flex items-baseline justify-between gap-4">
-        <span className="kicker text-oxblood">Off the wire — now featuring</span>
+        <span className="kicker text-oxblood">
+          {active.tier === "lead" ? "The lead" : "Featured"} — by importance
+        </span>
         {rotating && (
           <span className="kicker tabular-nums text-sepia-light">
             {index + 1} / {count}
@@ -83,7 +88,7 @@ export function FeaturedCarousel({
         </div>
       )}
 
-      <div className="relative mt-6 min-h-[22rem] sm:min-h-[19rem]">
+      <div className="relative mt-6 min-h-[23rem] sm:min-h-[20rem]">
         <AnimatePresence mode="wait">
           <motion.article
             key={story.slug}
@@ -92,7 +97,10 @@ export function FeaturedCarousel({
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
             transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
           >
-            <div aria-live="polite" className="mb-4 flex items-center gap-4">
+            <div
+              aria-live="polite"
+              className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2"
+            >
               <ModeStamp mode={story.mode} />
               <span className="kicker text-sepia">
                 {story.badges.sources} source
@@ -101,6 +109,7 @@ export function FeaturedCarousel({
                   <> · {story.badges.verified} verified</>
                 )}
               </span>
+              <ImpactMeter score={active.score} className="ml-auto" />
             </div>
 
             <Link href={href} className="group block">
@@ -171,13 +180,13 @@ export function FeaturedCarousel({
             aria-label="Select a featured story"
             className="flex items-center gap-2"
           >
-            {stories.map((s, i) => (
+            {items.map((r, i) => (
               <button
-                key={s.slug}
+                key={r.story.slug}
                 type="button"
                 role="tab"
                 aria-selected={i === index}
-                aria-label={`Feature ${i + 1}: ${s.headline}`}
+                aria-label={`Feature ${i + 1}: ${r.story.headline}`}
                 onClick={() => setIndex(i)}
                 className={`h-2.5 w-2.5 rounded-full border transition-colors ${
                   i === index

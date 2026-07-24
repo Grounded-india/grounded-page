@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getAllEditions, getStory } from "@/lib/editions";
+import { scoreStory } from "@/lib/importance";
 import { Masthead } from "@/components/Masthead";
 import { StoryArticle } from "@/components/StoryArticle";
 
-export const dynamicParams = false;
+// In dev this lets a freshly-synced edition's stories render on-demand without a
+// restart; the production static export still pre-renders the full set below.
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return getAllEditions().flatMap((edition) =>
@@ -38,6 +41,8 @@ export default function StoryPage({
   const found = getStory(params.date, params.slug);
   if (!found) notFound();
 
+  const score = scoreStory(found.story, found.edition.stories.length);
+
   return (
     <>
       <Masthead variant="slim" active={null} />
@@ -46,6 +51,7 @@ export default function StoryPage({
         story={found.story}
         prev={found.prev}
         next={found.next}
+        score={score}
       />
     </>
   );

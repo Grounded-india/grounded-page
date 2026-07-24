@@ -9,7 +9,9 @@ export function SiteFooter() {
     <footer className="mt-16 border-t-2 border-ink/80">
       <div className="mx-auto w-full max-w-broadsheet px-5 py-10 sm:px-8">
         <div className="flex flex-col items-center gap-5 text-center">
-          <p className="font-masthead text-3xl text-ink">Grounded</p>
+          <p className="font-masthead text-3xl leading-none text-ink sm:text-4xl">
+            The Grounded Times
+          </p>
           <p className="kicker !tracking-[0.3em]">Every claim, a citation</p>
 
           <nav

@@ -33,13 +33,13 @@ const masthead = UnifrakturMaguntia({
 export const metadata: Metadata = {
   metadataBase: new URL("https://grounded.news"),
   title: {
-    default: "GROUNDED — The Fact-Grounded Daily",
-    template: "%s · GROUNDED",
+    default: "The Grounded Times — The Fact-Grounded Daily",
+    template: "%s · The Grounded Times",
   },
   description:
     "An autonomous, fact-grounded daily for India. Every claim extracted from source material, verified against its citations, and audited for hallucination. Credibility through transparency.",
   openGraph: {
-    title: "GROUNDED — The Fact-Grounded Daily",
+    title: "The Grounded Times — The Fact-Grounded Daily",
     description:
       "Autonomous, source-cited, auditable news. Every claim, a citation.",
     type: "website",

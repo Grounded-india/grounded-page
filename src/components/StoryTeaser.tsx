@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Story } from "@/lib/types";
 import { ModeStamp } from "./ModeStamp";
+import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
 
 function firstParagraph(markdown: string): string {
@@ -58,13 +59,22 @@ export function LeadStory({ story, date }: { story: Story; date: string }) {
 }
 
 /** A compact column teaser for the broadsheet grid. */
-export function StoryTeaser({ story, date }: { story: Story; date: string }) {
+export function StoryTeaser({
+  story,
+  date,
+  score,
+}: {
+  story: Story;
+  date: string;
+  score?: number;
+}) {
   const href = `/story/${date}/${story.slug}`;
   return (
     <article className="mb-8 break-inside-avoid pt-6">
       <hr className="rule-hair-soft mb-4" />
-      <div className="mb-2.5 flex items-center gap-3">
+      <div className="mb-2.5 flex items-center justify-between gap-3">
         <ModeStamp mode={story.mode} />
+        {score !== undefined && <ImpactMeter score={score} showLabel={false} />}
       </div>
 
       <Link href={href} className="group block">

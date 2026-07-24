@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Edition, Story } from "@/lib/types";
 import { ModeStamp } from "./ModeStamp";
+import { ImpactMeter } from "./ImpactMeter";
 import { SectionLabel } from "./SectionLabel";
 import { Prose } from "./Prose";
 import { DebateSpread } from "./DebateSpread";
@@ -23,11 +24,13 @@ export function StoryArticle({
   story,
   prev,
   next,
+  score,
 }: {
   edition: Edition;
   story: Story;
   prev?: Story;
   next?: Story;
+  score?: number;
 }) {
   return (
     <article className="mx-auto w-full max-w-[62rem] px-5 pb-10 pt-10 sm:px-8">
@@ -35,6 +38,7 @@ export function StoryArticle({
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         <ModeStamp mode={story.mode} />
         <BadgeLine story={story} />
+        {score !== undefined && <ImpactMeter score={score} />}
         <span className="kicker ml-auto text-sepia-light">
           No. {story.index} of {edition.stories.length}
         </span>

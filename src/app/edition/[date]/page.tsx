@@ -8,7 +8,9 @@ import {
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
 
-export const dynamicParams = false;
+// In dev this lets a freshly-synced edition be viewed on-demand without a
+// restart; the production static export still pre-renders the full set below.
+export const dynamicParams = true;
 
 export function generateStaticParams() {
   return getEditionDates().map((date) => ({ date }));

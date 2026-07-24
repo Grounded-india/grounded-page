@@ -56,22 +56,37 @@ export function Masthead({
           <span className="kicker !text-[0.6rem]">
             Vol. I{issueNumber ? ` · No. ${issueNumber}` : ""}
           </span>
-          <span className="kicker !text-[0.6rem]">The Grounded Times</span>
+          <span className="kicker !text-[0.6rem]">Est. MMXXVI</span>
         </div>
       )}
 
       <div className={isFull ? "pt-3 text-center" : "pt-4 text-center"}>
-        <Link href="/" aria-label="GROUNDED — front page" className="inline-block">
+        <Link
+          href="/"
+          aria-label="The Grounded Times — front page"
+          className="inline-block"
+        >
           <span
-            className="font-masthead leading-none text-ink"
+            className="block font-body uppercase leading-none text-sepia"
+            style={{
+              fontSize: isFull ? "0.82rem" : "0.62rem",
+              letterSpacing: "0.42em",
+              paddingLeft: "0.42em",
+              marginBottom: isFull ? "0.15rem" : "0.1rem",
+            }}
+          >
+            The
+          </span>
+          <span
+            className="block font-masthead leading-[0.9] text-ink"
             style={{
               fontSize: isFull
-                ? "clamp(3.1rem, 11vw, 6.5rem)"
-                : "clamp(2.1rem, 6vw, 3.2rem)",
+                ? "clamp(2.5rem, 9vw, 5.4rem)"
+                : "clamp(1.85rem, 6vw, 2.9rem)",
               letterSpacing: "0.01em",
             }}
           >
-            Grounded
+            Grounded Times
           </span>
         </Link>
       </div>

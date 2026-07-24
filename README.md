@@ -37,6 +37,30 @@ GROUNDED (backend) ──writes──▶ ../GROUNDED/output/edition-YYYY-MM-DD.m
 grounded-page ──reads at build──▶ content/editions/*.md ──▶ static broadsheet (out/)
 ```
 
+### Automated pipeline (watch → ingest → layout)
+
+You don't have to run the copy by hand. A watcher tails the backend's `output/`
+folder and reacts the moment a new/updated `edition-*.md` appears — it copies the
+file in, and the **front page lays it out by importance on its own** (see
+[Story positioning](#how-stories-are-positioned-importance-scoring)). Dropping a
+file is the *only* action needed to publish.
+
+```bash
+npm run dev:pipeline    # `next dev` + the watcher, together (live authoring)
+npm run pipeline        # watcher that runs a full `next build` on every new edition (prod/CI)
+npm run watch:editions  # just the watcher (sync only)
+```
+
+```
+backend writes edition-*.md ─▶ watch-editions.mjs (fs.watch + poll, debounced)
+        ├─ dev  : cp → content/editions/  → next dev re-reads on refresh (homepage is live)
+        └─ --build: cp → content/editions/ → next build → out/ regenerated automatically
+```
+
+In **dev**, editions are re-read from disk on every request (no build cache), so a
+synced file shows up on the next browser refresh. In **production** the site is a
+static export, so `npm run pipeline` runs `next build` for you on each new file.
+
 ---
 
 ## Quick start
@@ -45,6 +69,9 @@ grounded-page ──reads at build──▶ content/editions/*.md ──▶ stat
 npm install
 npm run sync:editions   # copy editions from ../GROUNDED/output
 npm run dev             # http://localhost:3000
+
+# …or run the site and the auto-ingest watcher together:
+npm run dev:pipeline    # new editions from the backend appear on refresh
 ```
 
 Build the static site:
@@ -76,10 +103,64 @@ backend folder isn't present.
 
 ## Adding an edition (the whole workflow)
 
+**Manual:**
+
 1. The pipeline writes `edition-2026-07-23.md` into its `output/` folder.
 2. `npm run sync:editions` (or just `npm run build`, which syncs first).
 3. Rebuild. The new date becomes the front page; older issues fall into the
    Archive. **No code is touched.**
+
+**Automated** (recommended): leave `npm run pipeline` (production) or
+`npm run dev:pipeline` (authoring) running. The instant the backend writes the
+file, it is synced and the layout is regenerated — importance scoring decides the
+lead, the featured rotation, the column grid and the "In Brief" rail on its own.
+
+---
+
+## How stories are positioned (importance scoring)
+
+The backend already emits stories in ranked order (story 1 = most important; it
+deliberately down-weights outrage/celebrity/virality). The frontend treats that
+rank as the **dominant** signal and layers a transparent, auditable score on top
+(`src/lib/importance.ts`) so the page can arrange itself with no human touch.
+
+**The score (0–100), heaviest weight first:**
+
+| Signal            | Why it matters                                              | Weight |
+| ----------------- | ----------------------------------------------------------- | -----: |
+| Editorial rank    | Where the backend placed the story (dominant)               |  ~40   |
+| Source tier       | primary/official ▸ wire ▸ social-aggregator                 | 20/10/3|
+| Grounding         | report mode + primary-source-backed + verified claims       |  ~24   |
+| Corroboration     | number of **distinct** outlets                              |  ~12   |
+| Volume            | how many source items were scraped (attention proxy)        |   ~7   |
+| Substance         | how many claims survived verification                       |  ~10   |
+| Debate penalty    | contested, no primary source                                |   −4   |
+
+The score maps to a **layout tier**, which is what actually positions the story:
+
+- **Lead** — the single highest-scoring substantive story → the hero.
+- **Feature** — the next two → they rotate through the hero with the lead.
+- **Standard** — the body → the ruled column grid.
+- **Brief** — terse single-source/single-claim items (raw filings, lone wire
+  snippets) → the **In Brief** rail.
+
+A small "signal-strength" **impact meter** on each teaser/article surfaces the
+reading (High / Notable / Moderate / Routine). `src/lib/importance.test.ts`
+locks this behaviour to the sample edition.
+
+**Ideas to make it sharper — push the score into the backend.** The frontend can
+only infer so much. The parser already reads an optional `impact N` token from a
+story's badge line, and if present it is used **verbatim**, overriding the
+heuristic. So the highest-fidelity path is for the backend (which sees the raw
+signal) to stamp an explicit importance score, e.g.:
+
+```
+> REPORT · 1 sources · 3 claim(s) kept · 3 verified · impact 87
+```
+
+Other backend-side upgrades worth considering: a topic tag (policy / markets /
+world / sport / culture) so soft news can be down-weighted precisely, and a
+recency/half-life so a running story decays over the day.
 
 ---
 
@@ -112,7 +193,9 @@ Handled data quirks (degrade gracefully, never crash):
 The parser is validated against the real sample edition
 (`content/editions/edition-2026-07-21.md`) in `src/lib/parser.test.ts` — 23
 assertions covering story count, an empty-Side-B debate, a report story,
-primary-source detection, slug/anchor parity, and the source lists.
+primary-source detection, slug/anchor parity, and the source lists. A second
+suite, `src/lib/importance.test.ts`, locks the scoring and layout tiers (14 more
+assertions).
 
 ---
 
@@ -120,10 +203,10 @@ primary-source detection, slug/anchor parity, and the source lists.
 
 | Route                    | Purpose                                                        |
 | ------------------------ | -------------------------------------------------------------- |
-| `/`                      | The latest edition as a broadsheet front page.                 |
-| `/edition/[date]`        | A specific edition's front page.                               |
-| `/story/[date]/[slug]`   | A single story (Context, Debate or What-we-know, claims, prev/next). |
-| `/archive`               | All back-issues, newest first.                                 |
+| `/`                      | The latest edition, arranged by importance: a rotating hero of the top stories, a column grid, and an "In Brief" rail. |
+| `/edition/[date]`        | A specific edition's front page (same importance layout).      |
+| `/story/[date]/[slug]`   | A single story (Context, Debate or What-we-know, claims, impact meter, prev/next). |
+| `/archive`               | All back-issues as miniature front-page cards, grouped by month, newest first. |
 | `/about`                 | The methodology — the six-layer pipeline and the credibility thesis. |
 
 Edition dates are derived from the **filename**; the human date is read from the
@@ -161,10 +244,12 @@ restrained page-turn · Vitest for the parser.
 ```
 content/editions/        edition-YYYY-MM-DD.md  (the only input)
 public/textures/         paper.png              (bundled background)
-scripts/sync-editions.mjs                        (the only backend coupling)
-src/lib/                 types · slug · humanize · parser · editions loader · tests
-src/components/          Masthead, FrontPage, StoryArticle, DebateSpread,
-                         ModeStamp, PrimarySeal, ClaimList, CitedSources, Prose, …
+scripts/sync-editions.mjs                        (one-shot copy — the backend coupling)
+scripts/watch-editions.mjs                       (auto-ingest watcher: sync [+ build])
+src/lib/                 types · slug · humanize · parser · importance · editions loader · tests
+src/components/          Masthead, FrontPage, FeaturedCarousel, StoryTeaser, BriefsList,
+                         ImpactMeter, StoryArticle, DebateSpread, ModeStamp, PrimarySeal,
+                         ClaimList, CitedSources, Prose, …
 src/app/                 /, /edition/[date], /story/[date]/[slug], /archive, /about
 ```
 
