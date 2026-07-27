@@ -109,13 +109,14 @@ function parseHeader(headerBlock: string, isoDate: string): HeaderInfo {
   const italicLine = headerBlock
     .split("\n")
     .map((l) => l.trim())
-    .find((l) => /^\*[^*].*\*$/.test(l));
+    // Accept both *italic* and _italic_ (backend has emitted both).
+    .find((l) => /^(\*[^*].*\*|_[^_].*_)$/.test(l));
 
   if (!italicLine) {
     return { humanDate: formatHumanDate(isoDate), storyCount: null };
   }
 
-  const inner = italicLine.replace(/^\*/, "").replace(/\*$/, "");
+  const inner = italicLine.replace(/^[*_]/, "").replace(/[*_]$/, "");
   const parts = inner.split("·").map((p) => p.trim());
 
   const dateWeekday = parts.find((p) =>
@@ -168,10 +169,11 @@ function parseBadges(badgeBody: string): { mode: Mode; badges: StoryBadges } {
 }
 
 // Text — *Outlet, Outlet* [ _(primary-source backed)_ ]
+// Also accepts _Outlet_ (underscore italics) — newer backend editions use that.
 // Separator is an em/en dash; non-greedy text so an embedded dash in the claim
 // (e.g. "NEW YORK (AP) — U.S.") is kept and only the final "— *outlet*" splits.
 const CLAIM_RE =
-  /^-\s+(.*?)\s+[—–]\s+\*([^*]+)\*(\s+_\(primary-source backed\)_)?\s*$/;
+  /^-\s+(.*?)\s+[—–]\s+(?:\*|_)([^*_]+)(?:\*|_)\s*(?:_\(primary-source backed\)_)?\s*$/;
 
 export function parseClaimLine(line: string): Claim | null {
   const match = line.match(CLAIM_RE);
@@ -182,7 +184,7 @@ export function parseClaimLine(line: string): Claim | null {
       .split(",")
       .map((o) => o.trim())
       .filter(Boolean),
-    primarySourceBacked: Boolean(match[3]),
+    primarySourceBacked: /_\(primary-source backed\)_\s*$/.test(line),
   };
 }
 
@@ -310,8 +312,11 @@ function parseDek(block: string): string | undefined {
 
   for (let i = headingIdx + 1; i < end; i++) {
     const line = lines[i].trim();
-    const dek = line.match(/^\*([^*].*?)\*$/);
-    if (dek) return dek[1].trim();
+    // Backend has emitted both *dek* and _dek_.
+    const star = line.match(/^\*([^*].*?)\*$/);
+    if (star) return star[1].trim();
+    const under = line.match(/^_([^_].*?)_$/);
+    if (under) return under[1].trim();
   }
   return undefined;
 }

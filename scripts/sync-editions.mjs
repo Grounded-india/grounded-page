@@ -12,6 +12,10 @@
  *   - We copy `edition-*.md` into `content/editions/`.
  *   - A new edition is just a new file dropped in → rebuild. No code changes.
  *
+ * On Vercel / CI the sibling GROUNDED repo is absent. Always commit the editions
+ * you want live into `content/editions/`, and use `--allow-missing` (the default
+ * for `prebuild`) so the build uses those committed files instead of failing.
+ *
  * Usage:
  *   node scripts/sync-editions.mjs                 # copy, fail loudly if source missing
  *   node scripts/sync-editions.mjs --allow-missing # copy if present, else no-op (used by prebuild)

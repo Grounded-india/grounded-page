@@ -113,17 +113,22 @@ Run the parser tests:
 npm test
 ```
 
-### Pointing at a different backend output folder
+### Deploy (Vercel — frontend only)
 
-`sync:editions` defaults to `../GROUNDED/output`. Override it:
+This site is a static Next.js export. The Python backend is **not** required at
+runtime. Vercel builds from the Markdown already committed under
+`content/editions/`.
 
-```bash
-SOURCE_DIR=/path/to/output npm run sync:editions
-```
+1. Push this repo to GitHub (including `content/editions/*.md`).
+2. Import the repo in Vercel → Framework Preset **Next.js** → Deploy.
+3. Leave env vars empty. No backend URL needed.
 
-`npm run build` runs `sync-editions --allow-missing` first, so a build still
-succeeds against whatever already lives in `content/editions/` even if the
-backend folder isn't present.
+After each new edition: run `python publish.py` in GROUNDED (or copy the
+`.md` into `content/editions/`), commit, and push — Vercel rebuilds the archive
+automatically.
+
+`prebuild` syncs from `../GROUNDED/output` when that folder exists locally; on
+Vercel it no-ops (`--allow-missing`) and uses the committed editions.
 
 ---
 

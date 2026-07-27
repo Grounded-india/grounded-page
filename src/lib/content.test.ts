@@ -6,7 +6,13 @@ import { cleanDek, hasContextBody, reconstructionNote, splitContext, storyLede }
 import type { Edition } from "./types";
 
 const FIXTURE_ID = "2026-07-21";
-const FIXTURE_PATH = path.join(process.cwd(), "content", "editions", `edition-${FIXTURE_ID}.md`);
+const FIXTURE_PATH = path.join(
+  process.cwd(),
+  "src",
+  "lib",
+  "__fixtures__",
+  `edition-${FIXTURE_ID}.md`,
+);
 
 function loadFixture(): Edition {
   return parseEdition(fs.readFileSync(FIXTURE_PATH, "utf8"), FIXTURE_ID);

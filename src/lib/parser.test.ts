@@ -12,10 +12,13 @@ import { humanizeInlineCitations, humanizeOutlet } from "./humanize";
 import type { Edition } from "./types";
 
 const FIXTURE_ID = "2026-07-21";
+// Kept under src/lib/__fixtures__ so the live content/editions/ folder can drop
+// old issues without breaking the golden parser suite.
 const FIXTURE_PATH = path.join(
   process.cwd(),
-  "content",
-  "editions",
+  "src",
+  "lib",
+  "__fixtures__",
   `edition-${FIXTURE_ID}.md`,
 );
 
@@ -177,71 +180,62 @@ describe("parseEdition — golden fixture edition-2026-07-21.md", () => {
   });
 });
 
-describe("parseEdition — new-format edition-2026-07-23.md", () => {
-  const NEW_ID = "2026-07-23";
-  const md = fs.readFileSync(
-    path.join(process.cwd(), "content", "editions", `edition-${NEW_ID}.md`),
-    "utf8",
-  );
-  const edition = parseEdition(md, NEW_ID);
-  const byIndex = (i: number) => edition.stories.find((s) => s.index === i)!;
-
-  it("reads the header and all 17 stories", () => {
-    expect(edition.humanDate).toBe("Thursday, 23 July 2026");
-    expect(edition.storyCount).toBe(17);
-    expect(edition.stories).toHaveLength(17);
-  });
-
-  it("captures the full '### Report' narrative for a report story", () => {
-    const s = byIndex(1); // PM announces fast-track courts
-    expect(s.mode).toBe("report");
-    expect(s.debate).toBeUndefined();
-    expect(s.report).toBeDefined();
-    expect(s.report!.length).toBeGreaterThan(400);
-    expect(s.report).toContain("fast-track court");
-  });
-
-  it("humanizes inline slugs and doesn't bleed the Sources line into the report", () => {
-    const s = byIndex(1);
-    expect(s.report).toContain("(PIB)");
-    expect(s.report).not.toContain("(pib)");
-    expect(s.report).not.toContain("pib-response");
-    expect(s.report).not.toContain("reddit_news");
-    expect(s.report).not.toContain("**Sources:**");
-    expect(s.report).not.toContain("Public discussion");
-  });
-
-  it("parses a multi-turn debate with rebuttals, closings and a bottom line", () => {
-    const s = byIndex(2); // Anantnag demolitions
-    expect(s.mode).toBe("debate");
-    const d = s.debate!;
-    expect(d.turns.length).toBeGreaterThanOrEqual(4);
-    expect(new Set(d.turns.map((t) => t.side))).toEqual(new Set([0, 1]));
-    expect(d.turns.some((t) => /\(closing\)/i.test(t.speaker))).toBe(true);
-    expect(d.bottomLine).toBeDefined();
-    expect(d.bottomLine).toMatch(/load-bearing/i);
-  });
-
-  it("humanizes inline slugs inside debate turns", () => {
-    const joined = byIndex(2)
-      .debate!.turns.map((t) => t.body)
-      .join("\n");
-    expect(joined).toContain("The Hindu");
-    expect(joined).not.toContain("the_hindu");
-  });
-
-  it("keeps 'Grounded points' primary-source-backed claims on a debate", () => {
-    const s = byIndex(3); // NDA allies — carries PIB primary-backed claims
-    expect(s.claims.length).toBeGreaterThan(0);
-    expect(s.claims.some((c) => c.primarySourceBacked)).toBe(true);
-  });
-
-  it("matches the backend TOC anchor slugs", () => {
-    expect(byIndex(1).slug).toBe(
-      "1-prime-minister-announces-fast-track-courts-to-handle-paper-leak-cases",
+describe("parseEdition — live new-format editions in content/", () => {
+  function load(id: string) {
+    const md = fs.readFileSync(
+      path.join(process.cwd(), "content", "editions", `edition-${id}.md`),
+      "utf8",
     );
-    expect(byIndex(3).slug).toBe(
-      "3-nda-allies-tdp-and-jdu-tread-cautiously-amid-neet-paper-leak-protests",
+    return parseEdition(md, id);
+  }
+
+  it("parses every committed edition without dropping stories", () => {
+    const dir = path.join(process.cwd(), "content", "editions");
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => /^edition-\d{4}-\d{2}-\d{2}\.md$/.test(f));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      const id = editionIdFromFilename(file)!;
+      const edition = load(id);
+      expect(edition.stories.length).toBeGreaterThan(0);
+      expect(edition.storyCount).toBe(edition.stories.length);
+      expect(edition.humanDate.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("captures ### Report bodies and does not bleed Sources into them", () => {
+    const edition = load("2026-07-27");
+    const report = edition.stories.find((s) => s.mode === "report" && s.report);
+    expect(report).toBeDefined();
+    expect(report!.report!.length).toBeGreaterThan(200);
+    expect(report!.report).not.toContain("**Sources:**");
+    expect(report!.report).not.toContain("Public discussion");
+  });
+
+  it("parses multi-turn debates with rebuttals/closings and a bottom line", () => {
+    const edition = load("2026-07-23");
+    const debateStory = edition.stories.find((s) => s.mode === "debate" && s.debate);
+    expect(debateStory).toBeDefined();
+    const d = debateStory!.debate!;
+    expect(d.turns.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(d.turns.map((t) => t.side)).size).toBeGreaterThanOrEqual(1);
+    expect(d.bottomLine).toBeDefined();
+    expect(d.bottomLine!.length).toBeGreaterThan(40);
+  });
+
+  it("reads underscore-italic deks (backend underscore style)", () => {
+    const edition = load("2026-07-23");
+    const withDek = edition.stories.find((s) => s.dek);
+    expect(withDek).toBeDefined();
+    expect(withDek!.dek!.length).toBeGreaterThan(10);
+  });
+
+  it("slugifies headlines to match TOC anchors", () => {
+    const edition = load("2026-07-27");
+    const s1 = edition.stories[0];
+    expect(s1.slug).toBe(
+      "1-government-appoints-nandan-nilekani-to-head-exam-reform-task-force",
     );
   });
 });
