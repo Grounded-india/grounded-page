@@ -11,37 +11,13 @@ export const metadata: Metadata = {
     "How GROUNDED is made: a six-layer, fully auditable pipeline that grounds every claim in its sources. Report vs. Debate, source tiers, and why every claim is cited.",
 };
 
-const PIPELINE: { n: string; title: string; body: string }[] = [
-  {
-    n: "I",
-    title: "Ingestion",
-    body: "Each cycle begins with the record itself — dispatches from government and the courts, the Reserve Bank, ministries and the wire services — read alongside a social radar of Reddit and Google News. The two are never confused: one is evidence, the other is only a signal of what to look at.",
-  },
-  {
-    n: "II",
-    title: "Clustering",
-    body: "Thousands of fragments are gathered into events. A filing, a wire flash and a dozen posts about the same occurrence are drawn together into a single story so that duplication cannot masquerade as corroboration.",
-  },
-  {
-    n: "III",
-    title: "Ranking",
-    body: "Events are weighed by consequence — their bearing on policy, law and the public purse. Outrage, celebrity and mere virality are deliberately marked down. What governs the country is placed above what merely trends within it.",
-  },
-  {
-    n: "IV",
-    title: "Extraction",
-    body: "From the source material a crew of agents lifts discrete, checkable claims — the load-bearing statements of fact on which a story rests — and separates them from colour and comment.",
-  },
-  {
-    n: "V",
-    title: "Verification",
-    body: "Every claim is set against its citations. A claim that an official or primary record confirms is sealed as primary-source backed; a claim that rests only on reporting is carried forward, but plainly marked as such.",
-  },
-  {
-    n: "VI",
-    title: "Audit",
-    body: "Before the ink is set, the assembled story is audited for anything the sources do not support. Stories built on a primary record are printed as a Report; those without one are not discarded but set out as a two-sided Debate.",
-  },
+const PIPELINE: { n: string; title: string }[] = [
+  { n: "I", title: "Ingestion" },
+  { n: "II", title: "Clustering" },
+  { n: "III", title: "Ranking" },
+  { n: "IV", title: "Extraction" },
+  { n: "V", title: "Verification" },
+  { n: "VI", title: "Audit" },
 ];
 
 export default function AboutPage() {
@@ -153,19 +129,14 @@ export default function AboutPage() {
             {PIPELINE.map((layer) => (
               <li
                 key={layer.n}
-                className="flex gap-5 border-t border-ink/15 py-5 first:border-t-0"
+                className="flex items-baseline gap-5 border-t border-ink/15 py-4 first:border-t-0"
               >
                 <span className="w-8 shrink-0 font-display text-2xl font-bold leading-none text-oxblood">
                   {layer.n}
                 </span>
-                <div>
-                  <h3 className="font-display text-xl font-bold text-ink">
-                    {layer.title}
-                  </h3>
-                  <p className="mt-1.5 font-body leading-relaxed text-ink">
-                    {layer.body}
-                  </p>
-                </div>
+                <h3 className="font-display text-xl font-bold text-ink">
+                  {layer.title}
+                </h3>
               </li>
             ))}
           </ol>
