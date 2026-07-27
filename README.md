@@ -37,24 +37,46 @@ GROUNDED (backend) ──writes──▶ ../GROUNDED/output/edition-YYYY-MM-DD.m
 grounded-page ──reads at build──▶ content/editions/*.md ──▶ static broadsheet (out/)
 ```
 
-### Automated pipeline (watch → ingest → layout)
+### The publish workflow (two repos, zero manual copy)
 
-You don't have to run the copy by hand. A watcher tails the backend's `output/`
-folder and reacts the moment a new/updated `edition-*.md` appears — it copies the
-file in, and the **front page lays it out by importance on its own** (see
-[Story positioning](#how-stories-are-positioned-importance-scoring)). Dropping a
-file is the *only* action needed to publish.
+This is the day-to-day loop. Keep the site watching; publish from the backend.
+
+**Terminal A — this repo (leave it running):**
 
 ```bash
-npm run dev:pipeline    # `next dev` + the watcher, together (live authoring)
-npm run pipeline        # watcher that runs a full `next build` on every new edition (prod/CI)
-npm run watch:editions  # just the watcher (sync only)
+npm run publish:live    # alias for `dev:pipeline` = next dev + edition watcher
+# http://localhost:3000
+```
+
+**Terminal B — the GROUNDED backend:**
+
+```bash
+cd ../GROUNDED
+python publish.py       # writes output/edition-YYYY-MM-DD.md AND copies it here
 ```
 
 ```
-backend writes edition-*.md ─▶ watch-editions.mjs (fs.watch + poll, debounced)
-        ├─ dev  : cp → content/editions/  → next dev re-reads on refresh (homepage is live)
-        └─ --build: cp → content/editions/ → next build → out/ regenerated automatically
+python publish.py  (GROUNDED)
+        │
+        ├─ writes  ../GROUNDED/output/edition-YYYY-MM-DD.md
+        └─ copies  grounded-page/content/editions/edition-YYYY-MM-DD.md
+                        │
+                        ▼
+         watch-editions.mjs also tails output/ (belt + suspenders)
+                        │
+                        ▼
+         next dev re-reads on refresh → importance layout → live front page
+```
+
+`publish.py` pushes the file into this repo directly. The watcher is a safety net
+for anything else that lands in `../GROUNDED/output/`. Either path is enough —
+together they make a missed copy almost impossible.
+
+```bash
+npm run publish:live    # recommended: site + watcher together
+npm run pipeline        # watcher + auto `next build` (prod/CI static export)
+npm run watch:editions  # watcher only
+npm run sync:editions   # one-shot copy, no watch
 ```
 
 In **dev**, editions are re-read from disk on every request (no build cache), so a
@@ -67,16 +89,20 @@ static export, so `npm run pipeline` runs `next build` for you on each new file.
 
 ```bash
 npm install
-npm run sync:editions   # copy editions from ../GROUNDED/output
-npm run dev             # http://localhost:3000
-
-# …or run the site and the auto-ingest watcher together:
-npm run dev:pipeline    # new editions from the backend appear on refresh
+npm run publish:live    # site + auto-ingest watcher → http://localhost:3000
 ```
 
-Build the static site:
+In the sibling backend repo, whenever an edition is ready:
 
 ```bash
+cd ../GROUNDED
+python publish.py       # writes + copies the Markdown here; refresh the browser
+```
+
+One-shot sync / build without the watcher:
+
+```bash
+npm run sync:editions   # copy editions from ../GROUNDED/output
 npm run build           # prebuild re-syncs editions, then exports to ./out
 npx serve out           # preview the static export (optional)
 ```
@@ -103,17 +129,19 @@ backend folder isn't present.
 
 ## Adding an edition (the whole workflow)
 
-**Manual:**
+**Recommended — automated:**
 
-1. The pipeline writes `edition-2026-07-23.md` into its `output/` folder.
-2. `npm run sync:editions` (or just `npm run build`, which syncs first).
-3. Rebuild. The new date becomes the front page; older issues fall into the
-   Archive. **No code is touched.**
+1. Leave `npm run publish:live` running in this repo.
+2. In `../GROUNDED`, run `python publish.py` (after the agent crew has built stories).
+3. Refresh the browser. The new date is the front page; older issues fall into the
+   Archive. Importance scoring decides the lead, featured rotation, column grid,
+   and "In Brief" rail on its own. **No frontend code is touched.**
 
-**Automated** (recommended): leave `npm run pipeline` (production) or
-`npm run dev:pipeline` (authoring) running. The instant the backend writes the
-file, it is synced and the layout is regenerated — importance scoring decides the
-lead, the featured rotation, the column grid and the "In Brief" rail on its own.
+**Manual (no watcher):**
+
+1. `python publish.py` in GROUNDED (or drop `edition-YYYY-MM-DD.md` into `output/`).
+2. `npm run sync:editions` here (skipped if `publish.py` already copied it).
+3. `npm run build` (or refresh if `next dev` is already running).
 
 ---
 

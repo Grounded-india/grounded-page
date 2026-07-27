@@ -14,6 +14,7 @@
     "watch:editions": "node scripts/watch-editions.mjs",
     "pipeline": "node scripts/watch-editions.mjs --build",
     "dev:pipeline": "concurrently -k -n site,editions -c blue,green \"next dev\" \"node scripts/watch-editions.mjs\"",
+    "publish:live": "npm run dev:pipeline",
     "prebuild": "node scripts/sync-editions.mjs --allow-missing"
   },
   "dependencies": {

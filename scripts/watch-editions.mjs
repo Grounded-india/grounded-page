@@ -126,6 +126,7 @@ async function main() {
   log(`source : ${SOURCE_DIR}`);
   log(`dest   : ${DEST_DIR}`);
   log(shouldBuild ? "mode   : sync + auto-build" : "mode   : sync only (use with `next dev`)");
+  log("trigger: run `python publish.py` in the GROUNDED repo — this picks it up automatically.");
 
   await waitForSourceDir();
 
@@ -141,7 +142,7 @@ async function main() {
     log(`fs.watch unavailable (${err.code || err.message}); falling back to polling only.`);
   }
 
-  // Safety-net poll in case an event is missed.
+  // Safety-net poll in case an event is missed (macOS sometimes drops fs.watch events).
   setInterval(scheduleSync, POLL_MS);
 
   log("watching for new editions. press Ctrl+C to stop.");
