@@ -1,7 +1,62 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getIssueNumber, getLatestEdition } from "@/lib/editions";
+import { storyLede } from "@/lib/content";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
+
+export function generateMetadata(): Metadata {
+  const edition = getLatestEdition();
+  if (!edition) {
+    return {
+      title: {
+        absolute: `${SITE_NAME} — The Fact-Grounded Daily for India`,
+      },
+    };
+  }
+
+  const top = edition.stories.slice(0, 3).map((s) => s.headline);
+  const description = [
+    `${SITE_NAME} · ${edition.humanDate}.`,
+    `${edition.stories.length} fact-grounded stories.`,
+    top.length ? `Today: ${top.join(" · ")}.` : "",
+    SITE_TAGLINE,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return {
+    title: {
+      absolute: `${SITE_NAME} — ${edition.humanDate}`,
+    },
+    description,
+    alternates: { canonical: "/" },
+    openGraph: {
+      type: "website",
+      title: `${SITE_NAME} — ${edition.humanDate}`,
+      description:
+        top[0] ??
+        storyLede(edition.stories[0]) ??
+        `${edition.stories.length} source-cited stories.`,
+      url: "/",
+      images: [
+        {
+          url: "/og.png",
+          width: 1200,
+          height: 630,
+          alt: `${SITE_NAME} — fact-grounded daily for India`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${SITE_NAME} — ${edition.humanDate}`,
+      description,
+      images: ["/og.png"],
+    },
+  };
+}
 
 export default function HomePage() {
   const edition = getLatestEdition();

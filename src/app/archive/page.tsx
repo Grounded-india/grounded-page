@@ -7,7 +7,14 @@ import { Masthead } from "@/components/Masthead";
 export const metadata: Metadata = {
   title: "Archive",
   description:
-    "Every back-issue of The Grounded Times, newest first. Each edition is a permanent, source-cited record.",
+    "Every back-issue of The Grounded Times, newest first. Each edition is a permanent, source-cited record of fact-grounded Indian news.",
+  alternates: { canonical: "/archive/" },
+  openGraph: {
+    title: "Archive · The Grounded Times",
+    description:
+      "Browse every published edition — source-cited, auditable, permanent.",
+    url: "/archive/",
+  },
 };
 
 function formatShort(iso: string): string {

@@ -5,6 +5,7 @@ import {
   getEditionDates,
   getIssueNumber,
 } from "@/lib/editions";
+import { SITE_NAME } from "@/lib/site";
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
 
@@ -23,9 +24,26 @@ export function generateMetadata({
 }): Metadata {
   const edition = getEdition(params.date);
   if (!edition) return { title: "Edition not found" };
+
+  const tops = edition.stories
+    .slice(0, 3)
+    .map((s) => s.headline)
+    .join(" · ");
+  const description = `${SITE_NAME} edition for ${edition.humanDate} — ${edition.stories.length} fact-grounded, source-cited stories.${tops ? ` Lead: ${tops}.` : ""}`;
+  const path = `/edition/${edition.date}/`;
+
   return {
-    title: `${edition.humanDate}`,
-    description: `The GROUNDED edition for ${edition.humanDate} — ${edition.stories.length} fact-grounded stories.`,
+    title: edition.humanDate,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "article",
+      title: `${SITE_NAME} — ${edition.humanDate}`,
+      description,
+      url: path,
+      publishedTime: `${edition.date}T00:00:00+05:30`,
+      siteName: SITE_NAME,
+    },
   };
 }
 

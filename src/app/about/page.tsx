@@ -8,7 +8,14 @@ import { PrimarySeal } from "@/components/PrimarySeal";
 export const metadata: Metadata = {
   title: "Method",
   description:
-    "How GROUNDED is made: a six-layer, fully auditable pipeline that grounds every claim in its sources. Report vs. Debate, source tiers, and why every claim is cited.",
+    "How The Grounded Times is made: a six-layer, fully auditable pipeline that grounds every claim in its sources. Report vs. Debate, source tiers, and why every claim is cited.",
+  alternates: { canonical: "/about/" },
+  openGraph: {
+    title: "Method · The Grounded Times",
+    description:
+      "Credibility through transparency — how an autonomous newspaper shows its work.",
+    url: "/about/",
+  },
 };
 
 const PIPELINE: { n: string; title: string }[] = [

@@ -7,6 +7,14 @@ import {
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { SiteFooter } from "@/components/SiteFooter";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/components/JsonLd";
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_URL,
+} from "@/lib/site";
 
 const display = Playfair_Display({
   subsets: ["latin"],
@@ -32,20 +40,65 @@ const masthead = UnifrakturMaguntia({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://grounded.news"),
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "The Grounded Times — The Fact-Grounded Daily",
-    template: "%s · The Grounded Times",
+    default: `${SITE_NAME} — The Fact-Grounded Daily for India`,
+    template: `%s · ${SITE_NAME}`,
   },
-  description:
-    "An autonomous, fact-grounded daily for India. Every claim extracted from source material, verified against its citations, and audited for hallucination. Credibility through transparency.",
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  keywords: SITE_KEYWORDS,
+  category: "news",
+  classification: "News / Journalism",
+  referrer: "origin-when-cross-origin",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "The Grounded Times — The Fact-Grounded Daily",
-    description:
-      "Autonomous, source-cited, auditable news. Every claim, a citation.",
     type: "website",
+    locale: "en_IN",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: `${SITE_NAME} — The Fact-Grounded Daily for India`,
+    description: `${SITE_TAGLINE} Autonomous, source-cited, auditable news for India. Every claim, a citation.`,
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE_NAME} — fact-grounded daily for India`,
+      },
+    ],
   },
-  robots: { index: true, follow: true },
+  twitter: {
+    card: "summary_large_image",
+    title: `${SITE_NAME} — The Fact-Grounded Daily`,
+    description: `${SITE_TAGLINE} Source-cited news for India.`,
+    images: ["/og.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+  other: {
+    "news_keywords":
+      "India news, fact check, source citation, AI journalism, GROUNDED",
+  },
 };
 
 export default function RootLayout({
@@ -55,10 +108,11 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="en-IN"
       className={`${display.variable} ${body.variable} ${masthead.variable}`}
     >
       <body className="font-body antialiased">
+        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
         <div className="flex min-h-screen flex-col">
           <div className="flex-1">{children}</div>
           <SiteFooter />
