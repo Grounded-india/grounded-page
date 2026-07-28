@@ -36,9 +36,6 @@ function ReaderNotice() {
         Notice
       </span>
       <span className="reader-notice-copy">
-        <span className="reader-notice-lead">
-          The Editor is taking letters today.
-        </span>
         <span className="reader-notice-ask">
           Have we kept you grounded?{" "}
           <span className="reader-notice-jump">Tell us ↓</span>
