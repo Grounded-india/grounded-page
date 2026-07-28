@@ -4,6 +4,7 @@ import {
   Source_Serif_4,
   UnifrakturMaguntia,
 } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { SiteFooter } from "@/components/SiteFooter";
 
@@ -62,6 +63,7 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
           <SiteFooter />
         </div>
+        <Analytics />
       </body>
     </html>
   );
