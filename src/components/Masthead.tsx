@@ -28,6 +28,26 @@ function MastheadNav({ active }: { active: NavKey }) {
   );
 }
 
+/** Slim notice under the nameplate — scrolls to the Letters box in the footer. */
+function ReaderNotice() {
+  return (
+    <a href="#correspondence" className="reader-notice group">
+      <span className="reader-notice-stamp" aria-hidden="true">
+        Notice
+      </span>
+      <span className="reader-notice-copy">
+        <span className="reader-notice-lead">
+          The Editor is taking letters today.
+        </span>
+        <span className="reader-notice-ask">
+          Have we kept you grounded?{" "}
+          <span className="reader-notice-jump">Tell us ↓</span>
+        </span>
+      </span>
+    </a>
+  );
+}
+
 interface MastheadProps {
   variant?: "full" | "slim";
   humanDate?: string;
@@ -108,11 +128,13 @@ export function Masthead({
           <hr className="rule-hair mt-3" />
           <MastheadNav active={active} />
           <hr className="rule-thick" />
+          <ReaderNotice />
         </>
       ) : (
         <>
           <MastheadNav active={active} />
           <hr className="rule-hair" />
+          <ReaderNotice />
         </>
       )}
     </header>

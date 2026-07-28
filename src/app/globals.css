@@ -643,6 +643,144 @@
     color: var(--oxblood);
     white-space: nowrap;
   }
+
+  /* --- Letters to the Editor (feedback invitation) -------------------- */
+  .letters-box {
+    text-align: center;
+    padding: 1.75rem 1.5rem 1.5rem;
+    border: 1px solid var(--hair);
+    background:
+      linear-gradient(var(--ink), var(--ink)) top / 100% 2px no-repeat,
+      linear-gradient(var(--oxblood), var(--oxblood)) top 3px / 100% 1px no-repeat,
+      rgba(247, 241, 228, 0.45);
+  }
+  .letters-kicker {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.28em;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--sepia);
+  }
+  .letters-headline {
+    margin-top: 1rem;
+    font-family: theme("fontFamily.display");
+    font-weight: 800;
+    font-size: clamp(1.55rem, 3.5vw, 2.05rem);
+    line-height: 1.12;
+    color: var(--ink);
+    text-wrap: balance;
+  }
+  .letters-lede {
+    margin: 0.85rem auto 0;
+    max-width: 28rem;
+    font-family: theme("fontFamily.body");
+    font-size: 0.98rem;
+    font-style: italic;
+    line-height: 1.55;
+    color: var(--sepia);
+  }
+  .letters-cta {
+    display: inline-block;
+    margin-top: 1.25rem;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--paper);
+    background: var(--ink);
+    padding: 0.7rem 1.35rem 0.65rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .letters-cta:hover {
+    background: var(--oxblood);
+    color: var(--paper);
+  }
+  .letters-note {
+    margin-top: 0.85rem;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.58rem;
+    color: var(--sepia-light, var(--sepia));
+  }
+
+  /* --- Notice to readers (masthead → #correspondence) ----------------- */
+  .reader-notice {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+    margin-top: 0.15rem;
+    padding: 0.7rem 0.25rem 0.85rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--hair-soft);
+    transition: background-color 0.2s ease;
+  }
+  .reader-notice:hover {
+    background: rgba(123, 45, 38, 0.04);
+  }
+  .reader-notice-stamp {
+    flex-shrink: 0;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: var(--oxblood);
+    border: 1.5px solid var(--oxblood);
+    padding: 0.28rem 0.45rem 0.22rem;
+    transform: rotate(-3deg);
+    opacity: 0.9;
+  }
+  .reader-notice-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.12rem;
+    text-align: left;
+  }
+  @media (min-width: 480px) {
+    .reader-notice-copy {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 0.55rem;
+    }
+  }
+  .reader-notice-lead {
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.62rem;
+    font-weight: 600;
+    color: var(--sepia);
+  }
+  .reader-notice-ask {
+    font-family: theme("fontFamily.display");
+    font-style: italic;
+    font-size: 0.95rem;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .reader-notice-jump {
+    font-style: normal;
+    font-family: theme("fontFamily.body");
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--oxblood);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  .reader-notice:hover .reader-notice-jump {
+    border-bottom-color: var(--oxblood);
+  }
 }
 
 @layer utilities {
@@ -652,6 +790,15 @@
   }
   .center-rule {
     border-left: 1px solid var(--hair);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 
