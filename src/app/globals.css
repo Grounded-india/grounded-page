@@ -514,6 +514,46 @@
     }
   }
 
+  /* The two "second lead" teasers. On a wide screen they're cut 2:1 so their
+     divider lands on the same line as the three-column grid below it, rather
+     than splitting the page down a middle that matches nothing. */
+  .edition-deck {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .edition-deck > * {
+    padding-top: 1.4rem;
+    padding-bottom: 1.6rem;
+    border-top: 1px solid var(--hair-soft);
+  }
+  @media (min-width: 640px) {
+    .edition-deck {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .edition-deck > *:first-child {
+      padding-right: 1.75rem;
+    }
+    .edition-deck > *:last-child {
+      padding-left: 1.75rem;
+      border-left: 1px solid var(--hair-soft);
+    }
+  }
+  @media (min-width: 1024px) {
+    .edition-deck[data-cols="3"] {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    }
+    .edition-deck[data-cols="3"] > *:first-child {
+      padding-right: 1.6rem;
+    }
+    .edition-deck[data-cols="3"] > *:last-child {
+      padding-left: 1.6rem;
+    }
+    /* the companion sits in a single column, so it steps down a size */
+    .edition-deck[data-cols="3"] > *:last-child .teaser-headline {
+      font-size: 1.5rem;
+    }
+  }
+
   /* --- Teaser card ---------------------------------------------------- */
   .teaser {
     position: relative;
