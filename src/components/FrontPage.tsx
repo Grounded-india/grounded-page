@@ -27,7 +27,7 @@ function DeckHeader({ count }: { count: number }) {
 /**
  * A run of teasers on the shared column grid. `cols` is the widest column count
  * the run may open up to on a large screen; narrower breakpoints step down on
- * their own (see `.edition-grid` in globals.css).
+ * their own (see `.edition-grid` / `.edition-deck` in globals.css).
  */
 function TeaserGrid({
   items,
@@ -44,7 +44,10 @@ function TeaserGrid({
 }) {
   if (items.length === 0) return null;
   return (
-    <div className="edition-grid" data-cols={cols}>
+    <div
+      className={variant === "feature" ? "edition-deck" : "edition-grid"}
+      data-cols={cols}
+    >
       {items.map((r, i) => (
         <StoryTeaser
           key={r.story.slug}
@@ -91,8 +94,10 @@ export function FrontPage({ edition }: { edition: Edition }) {
 
   // The hero already carries the top stories, so numbering picks up after them.
   const firstOrdinal = featured.length + 1;
-  const leads = standard.slice(0, SECOND_LEADS);
-  const rest = standard.slice(SECOND_LEADS);
+  // The deck is a fixed pair, so it only opens when there are two to put in it.
+  const hasDeck = standard.length >= SECOND_LEADS;
+  const leads = hasDeck ? standard.slice(0, SECOND_LEADS) : [];
+  const rest = hasDeck ? standard.slice(SECOND_LEADS) : standard;
   const restOrdinal = firstOrdinal + leads.length;
 
   // With a briefs rail taking a sidebar, the grid never widens past two columns.
@@ -103,7 +108,7 @@ export function FrontPage({ edition }: { edition: Edition }) {
       <TeaserGrid
         items={leads}
         date={edition.date}
-        cols={2}
+        cols={gridCols}
         startOrdinal={firstOrdinal}
         variant="feature"
       />
