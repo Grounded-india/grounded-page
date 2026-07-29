@@ -9,8 +9,12 @@ import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
 
-/** How long each featured story holds before the page turns. */
-const INTERVAL_MS = 6500;
+/**
+ * How long each featured story holds before the page turns. Long enough to read
+ * the headline, standfirst and opening paragraph without being rushed — readers
+ * who want to linger further can stop the rotation with the ⏸ control.
+ */
+const INTERVAL_MS = 14000;
 
 /**
  * The rotating "front-page banner". It cycles the edition's MOST IMPORTANT

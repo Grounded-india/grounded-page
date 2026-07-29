@@ -1,57 +1,70 @@
 import Link from "next/link";
 import type { Story } from "@/lib/types";
-import { cleanDek } from "@/lib/content";
+import { teaserBlurb } from "@/lib/content";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 
-function MetaLine({ story }: { story: Story }) {
-  return (
-    <span className="kicker text-sepia">
-      {story.badges.sources} source{story.badges.sources === 1 ? "" : "s"}
-      {story.badges.verified !== undefined && (
-        <> · {story.badges.verified} verified</>
-      )}
-    </span>
-  );
+export type TeaserVariant = "feature" | "standard";
+
+/** Named outlets when the story cites any, otherwise the counted badge. */
+function sourceLine(story: Story): string {
+  if (story.sources.length > 0) return story.sources.join(" · ");
+  const n = story.badges.sources;
+  return `${n} source${n === 1 ? "" : "s"}`;
 }
 
-/** A compact column teaser for the broadsheet grid. */
+/**
+ * A front-page teaser card. Two treatments, one component:
+ *   feature  — the secondary leads sitting directly under the hero
+ *   standard — the column grid below them
+ * The headline link is stretched over the whole card in CSS, so the card is one
+ * hit area and one tab stop — a reader doesn't traverse a duplicate "Read"
+ * link for every story on the page.
+ */
 export function StoryTeaser({
   story,
   date,
   score,
+  ordinal,
+  variant = "standard",
 }: {
   story: Story;
   date: string;
   score?: number;
+  ordinal?: number;
+  variant?: TeaserVariant;
 }) {
   const href = `/story/${date}/${story.slug}`;
-  const dek = cleanDek(story.dek, story.headline);
+  const blurb = teaserBlurb(story);
+  const sources = sourceLine(story);
+
   return (
-    <article className="mb-8 break-inside-avoid pt-6">
-      <hr className="rule-hair-soft mb-4" />
-      <div className="mb-2.5 flex items-center justify-between gap-3">
+    <article className="teaser" data-variant={variant}>
+      <div className="teaser-top">
+        {ordinal !== undefined && (
+          <span className="teaser-no" aria-hidden="true">
+            {String(ordinal).padStart(2, "0")}
+          </span>
+        )}
         <ModeStamp mode={story.mode} />
-        {score !== undefined && <ImpactMeter score={score} showLabel={false} />}
+        {score !== undefined && (
+          <ImpactMeter score={score} showLabel={false} className="ml-auto" />
+        )}
       </div>
 
-      <Link href={href} className="group block">
-        <h3 className="font-display text-[1.45rem] font-bold leading-[1.12] text-ink transition-opacity group-hover:opacity-80">
+      <h3 className="teaser-headline">
+        <Link href={href} className="teaser-link">
           {story.headline}
-        </h3>
-      </Link>
-
-      {dek && (
-        <p className="mt-2 font-body text-[0.95rem] italic leading-snug text-sepia">
-          {dek}
-        </p>
-      )}
-
-      <div className="mt-3 flex items-center justify-between">
-        <MetaLine story={story} />
-        <Link href={href} className="ink-link font-body text-xs uppercase tracking-wide2 text-oxblood">
-          Read →
         </Link>
+      </h3>
+
+      {blurb && <p className="teaser-dek">{blurb}</p>}
+
+      <div className="teaser-foot">
+        <span className="teaser-sources">{sources}</span>
+        <span className="teaser-read" aria-hidden="true">
+          Read <span className="teaser-arrow">→</span>
+        </span>
       </div>
     </article>
   );

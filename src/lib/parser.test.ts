@@ -231,12 +231,15 @@ describe("parseEdition — live new-format editions in content/", () => {
     expect(withDek!.dek!.length).toBeGreaterThan(10);
   });
 
-  it("slugifies headlines to match TOC anchors", () => {
+  // Asserted structurally rather than against one hardcoded headline, so the
+  // test survives an edition's content being republished.
+  it("slugifies every headline to match its TOC anchor", () => {
     const edition = load("2026-07-27");
-    const s1 = edition.stories[0];
-    expect(s1.slug).toBe(
-      "1-government-appoints-nandan-nilekani-to-head-exam-reform-task-force",
-    );
+    expect(edition.stories.length).toBeGreaterThan(0);
+    for (const s of edition.stories) {
+      expect(s.slug).toBe(storySlug(s.index, s.rawHeadline));
+      expect(s.slug).toMatch(/^\d+-[a-z0-9-]+$/);
+    }
   });
 });
 

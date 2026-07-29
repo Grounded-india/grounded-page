@@ -67,6 +67,22 @@ export function storyLede(story: Story): string {
 }
 
 /**
+ * A one-line plain-text blurb for a front-page teaser: the cleaned dek when the
+ * backend wrote one, otherwise the opening of the story itself. Emphasis markers
+ * and inline outlet refs are flattened, since a teaser renders as plain text
+ * rather than through the Markdown renderer.
+ */
+export function teaserBlurb(story: Story): string {
+  const source = cleanDek(story.dek, story.headline) ?? storyLede(story);
+  return source
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[*_`]/g, "")
+    .replace(/\s*\((?:[a-z0-9]+_)+[a-z0-9]+\)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * A clean, human "reconstructed from …" note built from structured data (no raw
  * outlet slugs), used in place of the backend's boilerplate for stub stories.
  */
