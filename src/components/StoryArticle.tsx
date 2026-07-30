@@ -8,6 +8,7 @@ import { Prose } from "./Prose";
 import { DebateSpread } from "./DebateSpread";
 import { ClaimList } from "./ClaimList";
 import { CitedSources } from "./CitedSources";
+import { StoryFigure } from "./StoryFigure";
 
 function BadgeLine({ story }: { story: Story }) {
   const parts: string[] = [
@@ -35,9 +36,10 @@ export function StoryArticle({
 }) {
   const dek = cleanDek(story.dek, story.headline);
   const { body } = splitContext(story.context);
+  const [lead, ...gallery] = story.images;
+
   return (
     <article className="mx-auto w-full max-w-[62rem] px-5 pb-10 pt-10 sm:px-8">
-      {/* Kicker + provenance */}
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
         <ModeStamp mode={story.mode} />
         <BadgeLine story={story} />
@@ -60,6 +62,12 @@ export function StoryArticle({
         </p>
       )}
 
+      {lead && (
+        <div className="mt-7 max-w-[52rem]">
+          <StoryFigure image={lead} size="hero" priority />
+        </div>
+      )}
+
       <div className="mt-5 flex items-center gap-4">
         <hr className="rule-hair flex-1" />
         <Link
@@ -71,11 +79,6 @@ export function StoryArticle({
         <hr className="rule-hair flex-1" />
       </div>
 
-      {/* Context — real body when we have it; otherwise a clean provenance note
-          for stub stories (a single title-only primary source) instead of the
-          backend's "reconstructed from N source item(s)…" boilerplate. When a
-          full Report follows, Context reads as a brief standfirst (no drop cap)
-          and the drop cap moves to the Report body below. */}
       {hasContextBody(story.context) ? (
         <section className="mt-8 max-w-[44rem]">
           <SectionLabel>Context</SectionLabel>
@@ -87,7 +90,6 @@ export function StoryArticle({
         </p>
       )}
 
-      {/* Full report narrative (newer report editions) */}
       {story.report && (
         <section className="mt-10 max-w-[44rem]">
           <SectionLabel>Report</SectionLabel>
@@ -95,7 +97,6 @@ export function StoryArticle({
         </section>
       )}
 
-      {/* Debate OR What we know */}
       {story.mode === "debate" && story.debate ? (
         <section className="mt-12">
           <SectionLabel>The debate</SectionLabel>
@@ -112,11 +113,21 @@ export function StoryArticle({
         </section>
       )}
 
+      {gallery.length > 0 && (
+        <section className="mt-12 max-w-[52rem]" aria-label="Photographs">
+          <SectionLabel>Photographs</SectionLabel>
+          <div className="photo-gallery">
+            {gallery.map((image) => (
+              <StoryFigure key={image.src} image={image} size="inline" />
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="max-w-[46rem]">
         <CitedSources sources={story.sources} />
       </div>
 
-      {/* Prev / next navigation */}
       <nav
         aria-label="Story navigation"
         className="mt-14 grid grid-cols-1 gap-4 border-t-2 border-ink/80 pt-6 sm:grid-cols-3 sm:items-start"
@@ -138,10 +149,7 @@ export function StoryArticle({
         </div>
 
         <div className="text-center sm:justify-self-center">
-          <Link
-            href={`/edition/${edition.date}`}
-            className="nav-link"
-          >
+          <Link href={`/edition/${edition.date}`} className="nav-link">
             Back to the edition
           </Link>
         </div>

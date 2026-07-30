@@ -5,6 +5,9 @@ import {
   editionIdFromFilename,
   parseClaimLine,
   parseEdition,
+  parseStoryImages,
+  resolveImageSrc,
+  stripImages,
   stripSourceSuffix,
 } from "./parser";
 import { storySlug } from "./slug";
@@ -300,5 +303,54 @@ describe("unit helpers", () => {
     expect(humanizeInlineCitations("assured relief (pib-response) today")).toContain(
       "(PIB)",
     );
+  });
+
+  it("resolveImageSrc maps relative photograph paths to public URLs", () => {
+    expect(resolveImageSrc("images/2026-07-29/x.jpg")).toBe(
+      "/images/2026-07-29/x.jpg",
+    );
+    expect(resolveImageSrc("/images/x.jpg")).toBe("/images/x.jpg");
+    expect(resolveImageSrc("https://cdn.example/x.jpg")).toBe(
+      "https://cdn.example/x.jpg",
+    );
+  });
+
+  it("parseStoryImages reads alt, caption and Photo via credit", () => {
+    const block = [
+      "![OpenAI on a phone](images/2026-07-29/demo.jpg)",
+      "",
+      "<sub>*A phone shows the OpenAI logo. — Photo via [Indian Express](https://indianexpress.com/x)*</sub>",
+    ].join("\n");
+    const images = parseStoryImages(block);
+    expect(images).toHaveLength(1);
+    expect(images[0]).toMatchObject({
+      src: "/images/2026-07-29/demo.jpg",
+      alt: "OpenAI on a phone",
+      caption: "A phone shows the OpenAI logo.",
+      credit: "Indian Express",
+      creditUrl: "https://indianexpress.com/x",
+    });
+    expect(stripImages(block)).toBe("");
+  });
+});
+
+describe("parseEdition — photographed edition-2026-07-30.md", () => {
+  it("attaches lead photographs to nearly every story", () => {
+    const file = path.join(
+      process.cwd(),
+      "content",
+      "editions",
+      "edition-2026-07-30.md",
+    );
+    if (!fs.existsSync(file)) return;
+    const edition = parseEdition(fs.readFileSync(file, "utf8"), "2026-07-30");
+    expect(edition.stories.length).toBeGreaterThanOrEqual(18);
+    const withPhotos = edition.stories.filter((s) => s.images.length > 0);
+    expect(withPhotos.length).toBeGreaterThanOrEqual(16);
+    const lead = edition.stories[0];
+    expect(lead.images[0]?.src).toMatch(/^\/images\/2026-07-29\//);
+    expect(lead.images[0]?.credit).toBeTruthy();
+    // Photographs are lifted out of the prose so they don't render twice.
+    expect(lead.context).not.toMatch(/!\[/);
   });
 });

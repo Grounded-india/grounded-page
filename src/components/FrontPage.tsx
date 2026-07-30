@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { Edition } from "@/lib/types";
 import { layoutEdition, type RankedStory } from "@/lib/importance";
 import { FeaturedCarousel } from "./FeaturedCarousel";
-import { StoryTeaser, type TeaserVariant } from "./StoryTeaser";
+import { StoryTeaser } from "./StoryTeaser";
 import { BriefsList } from "./BriefsList";
 
 /** How many of the top standard stories get the wide "second lead" treatment. */
 const SECOND_LEADS = 2;
+/** How many mid-page photo bands to cut across the page. */
+const PHOTO_BANDS = 2;
 
 /** The ruled section header that opens everything below the hero. */
 function DeckHeader({ count }: { count: number }) {
@@ -24,30 +26,18 @@ function DeckHeader({ count }: { count: number }) {
   );
 }
 
-/**
- * A run of teasers on the shared column grid. `cols` is the widest column count
- * the run may open up to on a large screen; narrower breakpoints step down on
- * their own (see `.edition-grid` / `.edition-deck` in globals.css).
- */
-function TeaserGrid({
+function PhotoGrid({
   items,
   date,
-  cols,
   startOrdinal,
-  variant = "standard",
 }: {
   items: RankedStory[];
   date: string;
-  cols: 2 | 3;
   startOrdinal: number;
-  variant?: TeaserVariant;
 }) {
   if (items.length === 0) return null;
   return (
-    <div
-      className={variant === "feature" ? "edition-deck" : "edition-grid"}
-      data-cols={cols}
-    >
+    <div className="photo-grid">
       {items.map((r, i) => (
         <StoryTeaser
           key={r.story.slug}
@@ -55,7 +45,7 @@ function TeaserGrid({
           date={date}
           score={r.score}
           ordinal={startOrdinal + i}
-          variant={variant}
+          variant="standard"
         />
       ))}
     </div>
@@ -63,13 +53,13 @@ function TeaserGrid({
 }
 
 /**
- * Renders an edition as an importance-driven broadsheet front page:
- *   1. a rotating hero of the most important stories (lead + features),
- *   2. two wide "second lead" teasers,
- *   3. a ruled column grid of the remaining stories, and
- *   4. an "In Brief" rail of the terse, single-source items.
+ * Renders an edition as a photo-led broadsheet front page:
+ *   1. a rotating hero of the most important stories (with lead photograph),
+ *   2. two wide second-lead photo features,
+ *   3. alternating mid-page photo bands for the next few stories,
+ *   4. a two-column photo grid for the rest, and
+ *   5. an "In Brief" rail of the terse, single-source items.
  * Every placement is decided by lib/importance.ts — nothing is positioned by hand.
- * Used by `/` and `/edition/[date]`.
  */
 export function FrontPage({ edition }: { edition: Edition }) {
   if (edition.stories.length === 0) {
@@ -92,32 +82,56 @@ export function FrontPage({ edition }: { edition: Edition }) {
   const remaining = standard.length + briefs.length;
   const hasBriefs = briefs.length > 0;
 
-  // The hero already carries the top stories, so numbering picks up after them.
   const firstOrdinal = featured.length + 1;
-  // The deck is a fixed pair, so it only opens when there are two to put in it.
   const hasDeck = standard.length >= SECOND_LEADS;
   const leads = hasDeck ? standard.slice(0, SECOND_LEADS) : [];
-  const rest = hasDeck ? standard.slice(SECOND_LEADS) : standard;
-  const restOrdinal = firstOrdinal + leads.length;
 
-  // With a briefs rail taking a sidebar, the grid never widens past two columns.
-  const gridCols = hasBriefs ? 2 : 3;
+  // Prefer photo-bearing stories for the mid-page bands so the layout earns its
+  // visual rhythm; fall back to whatever remains if few photographs landed.
+  const afterLeads = hasDeck ? standard.slice(SECOND_LEADS) : standard;
+  const withPhoto = afterLeads.filter((r) => r.story.images.length > 0);
+  const withoutPhoto = afterLeads.filter((r) => r.story.images.length === 0);
+  const bands = withPhoto.slice(0, PHOTO_BANDS);
+  const bandSlugs = new Set(bands.map((r) => r.story.slug));
+  const rest = [
+    ...withPhoto.filter((r) => !bandSlugs.has(r.story.slug)),
+    ...withoutPhoto,
+  ];
 
-  const runs = (
+  const bandOrdinal = firstOrdinal + leads.length;
+  const restOrdinal = bandOrdinal + bands.length;
+
+  const main = (
     <>
-      <TeaserGrid
-        items={leads}
-        date={edition.date}
-        cols={gridCols}
-        startOrdinal={firstOrdinal}
-        variant="feature"
-      />
-      <TeaserGrid
-        items={rest}
-        date={edition.date}
-        cols={gridCols}
-        startOrdinal={restOrdinal}
-      />
+      {leads.length > 0 && (
+        <div className="second-leads">
+          {leads.map((r, i) => (
+            <StoryTeaser
+              key={r.story.slug}
+              story={r.story}
+              date={edition.date}
+              score={r.score}
+              ordinal={firstOrdinal + i}
+              variant="feature"
+            />
+          ))}
+        </div>
+      )}
+
+      {bands.map((r, i) => (
+        <div key={r.story.slug} className="photo-band-wrap">
+          <StoryTeaser
+            story={r.story}
+            date={edition.date}
+            score={r.score}
+            ordinal={bandOrdinal + i}
+            variant="band"
+            bandFlip={i % 2 === 1}
+          />
+        </div>
+      ))}
+
+      <PhotoGrid items={rest} date={edition.date} startOrdinal={restOrdinal} />
     </>
   );
 
@@ -126,19 +140,19 @@ export function FrontPage({ edition }: { edition: Edition }) {
       <FeaturedCarousel items={featured} date={edition.date} />
 
       {remaining > 0 && (
-        <section aria-label="The rest of this edition">
+        <section aria-label="The rest of this edition" className="edition-body">
           <hr className="rule-thick mt-10" />
           <DeckHeader count={remaining} />
 
           {hasBriefs ? (
-            <div className="grid grid-cols-1 gap-x-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
-              <div>{runs}</div>
+            <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
+              <div>{main}</div>
               <div className="briefs-rail">
                 <BriefsList items={briefs} date={edition.date} />
               </div>
             </div>
           ) : (
-            runs
+            main
           )}
         </section>
       )}

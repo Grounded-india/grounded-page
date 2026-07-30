@@ -38,11 +38,28 @@ export function getAllEditions(): Edition[] {
 
   const editions = readEditionIds().map((id) => {
     const file = path.join(EDITIONS_DIR, `edition-${id}.md`);
-    return parseEdition(fs.readFileSync(file, "utf8"), id);
+    const edition = parseEdition(fs.readFileSync(file, "utf8"), id);
+    // Drop photographs whose files never landed in public/images — better a
+    // text-only teaser than a broken cut on the printed page.
+    return {
+      ...edition,
+      stories: edition.stories.map((story) => ({
+        ...story,
+        images: story.images.filter(imageExists),
+      })),
+    };
   });
 
   if (CACHE_ENABLED) editionCache = editions;
   return editions;
+}
+
+function imageExists(image: { src: string }): boolean {
+  if (/^https?:\/\//i.test(image.src) || image.src.startsWith("data:")) {
+    return true;
+  }
+  const rel = image.src.replace(/^\//, "");
+  return fs.existsSync(path.join(process.cwd(), "public", rel));
 }
 
 export function getEditionDates(): string[] {

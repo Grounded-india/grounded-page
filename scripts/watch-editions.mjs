@@ -33,6 +33,8 @@ const SOURCE_DIR = process.env.SOURCE_DIR
   : path.resolve(repoRoot, "..", "GROUNDED", "output");
 
 const DEST_DIR = path.resolve(repoRoot, "content", "editions");
+const IMAGES_SRC = path.join(SOURCE_DIR, "images");
+const IMAGES_DEST = path.resolve(repoRoot, "public", "images");
 const EDITION_RE = /^edition-\d{4}-\d{2}-\d{2}\.md$/;
 const shouldBuild = process.argv.includes("--build");
 
@@ -42,6 +44,21 @@ const POLL_MS = 4000;
 const DEBOUNCE_MS = 800;
 
 const log = (msg) => console.log(`[watch:editions] ${msg}`);
+
+async function syncImages() {
+  if (!existsSync(IMAGES_SRC)) return false;
+  await mkdir(IMAGES_DEST, { recursive: true });
+  const dates = await readdir(IMAGES_SRC);
+  let any = false;
+  for (const name of dates) {
+    const from = path.join(IMAGES_SRC, name);
+    const to = path.join(IMAGES_DEST, name);
+    if (!(await stat(from)).isDirectory()) continue;
+    await cp(from, to, { recursive: true });
+    any = true;
+  }
+  return any;
+}
 
 /** Copy edition files whose size/mtime differ from the destination. */
 async function syncOnce() {
@@ -64,6 +81,12 @@ async function syncOnce() {
       await cp(from, to);
       changed.push(name);
     }
+  }
+
+  // Always refresh photographs alongside Markdown — cheap, and keeps captions
+  // that land mid-write from pointing at a missing file.
+  if (await syncImages()) {
+    if (!changed.includes("images/")) changed.push("images/");
   }
   return changed;
 }
@@ -136,8 +159,15 @@ async function main() {
   // Event-driven: react instantly when the backend writes a file.
   try {
     watch(SOURCE_DIR, { persistent: true }, (_event, filename) => {
-      if (!filename || EDITION_RE.test(filename)) scheduleSync();
+      if (!filename || EDITION_RE.test(filename) || filename === "images") {
+        scheduleSync();
+      }
     });
+    if (existsSync(IMAGES_SRC)) {
+      watch(IMAGES_SRC, { persistent: true, recursive: true }, () => {
+        scheduleSync();
+      });
+    }
   } catch (err) {
     log(`fs.watch unavailable (${err.code || err.message}); falling back to polling only.`);
   }

@@ -439,6 +439,89 @@
     background: var(--oxblood);
   }
 
+  /* --- Lead spread (photo + copy side by side) ------------------------ */
+  .lead-spread[data-has-photo="true"] {
+    display: grid;
+    gap: 1.5rem 2rem;
+    align-items: start;
+  }
+  @media (min-width: 900px) {
+    .lead-spread[data-has-photo="true"] {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    }
+  }
+  .lead-lede .prose-paper p {
+    text-align: left;
+    -webkit-line-clamp: 4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* --- Photograph cuts ------------------------------------------------ */
+  .photo-cut {
+    margin: 0;
+  }
+  .photo-cut img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--paper-deep);
+    /* slight desaturation so photographs sit on the paper rather than pop */
+    filter: contrast(1.04) saturate(0.88);
+    border: 1px solid var(--hair);
+  }
+  .photo-cut-hero img {
+    aspect-ratio: 16 / 10;
+    max-height: 28rem;
+  }
+  .photo-cut-feature img {
+    aspect-ratio: 16 / 10;
+  }
+  .photo-cut-card img {
+    aspect-ratio: 3 / 2;
+  }
+  .photo-cut-inline img {
+    aspect-ratio: 16 / 10;
+  }
+  .photo-caption {
+    margin-top: 0.45rem;
+    font-family: theme("fontFamily.body");
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--sepia);
+  }
+  .photo-caption-text {
+    font-style: italic;
+  }
+  .photo-credit {
+    font-style: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.58rem;
+    font-weight: 600;
+  }
+  .photo-credit a {
+    color: var(--oxblood);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 150ms cubic-bezier(0, 0, 0.2, 1);
+  }
+  .photo-credit a:hover {
+    border-bottom-color: var(--oxblood);
+  }
+  .photo-gallery {
+    display: grid;
+    gap: 1.5rem;
+  }
+  @media (min-width: 720px) {
+    .photo-gallery {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.25rem 1.5rem;
+    }
+  }
+
   /* --- "In this edition" section header -------------------------------- */
   .deck-head {
     display: flex;
@@ -446,7 +529,7 @@
     align-items: baseline;
     justify-content: space-between;
     gap: 0.35rem 1.5rem;
-    padding: 0.9rem 0 1rem;
+    padding: 0.9rem 0 0.35rem;
   }
   .deck-title {
     font-family: theme("fontFamily.display");
@@ -471,102 +554,83 @@
     color: var(--hair);
   }
 
-  /* --- Front-page teaser grid -----------------------------------------
-     A real CSS grid rather than column-flow: rows stay even, reading order
-     runs left-to-right, and the hairlines between cells read as the column
-     rules of a printed page. `data-cols` is the widest a run may open up to.  */
-  .edition-grid {
+  /* --- Second leads (two wide photo features) ------------------------- */
+  .second-leads {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-top: 0.5rem;
   }
-  .edition-grid > * {
-    padding-top: 1.4rem;
-    padding-bottom: 1.6rem;
-    border-top: 1px solid var(--hair-soft);
+  .second-leads > .teaser {
+    padding: 1.5rem 0 1.75rem;
+    border-top: 1px solid var(--hair);
   }
-  @media (min-width: 640px) {
-    .edition-grid {
+  @media (min-width: 768px) {
+    .second-leads {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: 0;
     }
-    .edition-grid > *:nth-child(2n + 1) {
+    .second-leads > .teaser:first-child {
       padding-right: 1.75rem;
     }
-    .edition-grid > *:nth-child(2n) {
+    .second-leads > .teaser:last-child {
       padding-left: 1.75rem;
-      border-left: 1px solid var(--hair-soft);
-    }
-  }
-  @media (min-width: 1024px) {
-    .edition-grid[data-cols="3"] {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-    /* reset the two-column rules before re-cutting them for three */
-    .edition-grid[data-cols="3"] > * {
-      padding-left: 0;
-      padding-right: 0;
-      border-left: 0;
-    }
-    .edition-grid[data-cols="3"] > *:not(:nth-child(3n + 1)) {
-      padding-left: 1.6rem;
-      border-left: 1px solid var(--hair-soft);
-    }
-    .edition-grid[data-cols="3"] > *:not(:nth-child(3n)) {
-      padding-right: 1.6rem;
+      border-left: 1px solid var(--hair);
     }
   }
 
-  /* The two "second lead" teasers. On a wide screen they're cut 2:1 so their
-     divider lands on the same line as the three-column grid below it, rather
-     than splitting the page down a middle that matches nothing. */
-  .edition-deck {
+  /* --- Mid-page photo bands ------------------------------------------- */
+  .photo-band-wrap {
+    border-top: 2px solid var(--ink);
+    padding: 1.6rem 0 1.85rem;
+  }
+
+  /* --- Photo grid (the rest of the edition) --------------------------- */
+  .photo-grid {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
+    gap: 0;
   }
-  .edition-deck > * {
-    padding-top: 1.4rem;
-    padding-bottom: 1.6rem;
+  .photo-grid > .teaser {
+    padding: 1.5rem 0 1.65rem;
     border-top: 1px solid var(--hair-soft);
   }
-  @media (min-width: 640px) {
-    .edition-deck {
+  @media (min-width: 720px) {
+    .photo-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .edition-deck > *:first-child {
-      padding-right: 1.75rem;
+    .photo-grid > .teaser:nth-child(2n + 1) {
+      padding-right: 1.5rem;
     }
-    .edition-deck > *:last-child {
-      padding-left: 1.75rem;
+    .photo-grid > .teaser:nth-child(2n) {
+      padding-left: 1.5rem;
       border-left: 1px solid var(--hair-soft);
     }
   }
-  @media (min-width: 1024px) {
-    .edition-deck[data-cols="3"] {
-      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    }
-    .edition-deck[data-cols="3"] > *:first-child {
-      padding-right: 1.6rem;
-    }
-    .edition-deck[data-cols="3"] > *:last-child {
-      padding-left: 1.6rem;
-    }
-    /* the companion sits in a single column, so it steps down a size */
-    .edition-deck[data-cols="3"] > *:last-child .teaser-headline {
-      font-size: 1.5rem;
-    }
-  }
 
-  /* --- Teaser card ---------------------------------------------------- */
+  /* --- Teaser --------------------------------------------------------- */
   .teaser {
     position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
+    gap: 0.85rem;
+  }
+  .teaser-media {
+    position: relative;
+    z-index: 0;
+  }
+  .teaser-copy {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
   }
   .teaser-top {
     display: flex;
     align-items: center;
     gap: 0.7rem;
-    margin-bottom: 0.7rem;
+    margin-bottom: 0.55rem;
   }
   .teaser-no {
     font-family: theme("fontFamily.display");
@@ -585,15 +649,14 @@
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
   }
-  /* Since the whole card is the target, ring the card — not the ragged inline
-     box of a headline that wrapped onto two lines. */
   .teaser-link:focus-visible {
     outline: none;
   }
   .teaser:focus-within {
     outline: 2px solid var(--oxblood);
-    outline-offset: 2px;
+    outline-offset: 3px;
   }
   .teaser-headline {
     font-family: theme("fontFamily.display");
@@ -603,39 +666,48 @@
   }
   .teaser[data-variant="feature"] .teaser-headline {
     font-weight: 800;
-    font-size: clamp(1.42rem, 2.4vw, 1.9rem);
+    font-size: clamp(1.35rem, 2.2vw, 1.85rem);
     line-height: 1.08;
   }
   .teaser[data-variant="standard"] .teaser-headline {
     font-weight: 700;
-    font-size: 1.2rem;
-    line-height: 1.19;
+    font-size: 1.22rem;
+    line-height: 1.18;
+  }
+  .teaser[data-variant="band"] .teaser-headline {
+    font-weight: 800;
+    font-size: clamp(1.55rem, 2.8vw, 2.15rem);
+    line-height: 1.08;
   }
   @media (hover: hover) {
     .teaser:hover .teaser-headline {
       color: var(--oxblood);
+    }
+    .teaser:hover .photo-cut img {
+      filter: contrast(1.06) saturate(0.95);
     }
   }
   .teaser:focus-within .teaser-headline {
     color: var(--oxblood);
   }
   .teaser-dek {
-    margin-top: 0.55rem;
+    margin-top: 0.5rem;
     font-family: theme("fontFamily.body");
     font-style: italic;
     color: var(--sepia);
     line-height: 1.5;
-    /* clamp so every card in a row lands on the same footer line */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
     overflow: hidden;
   }
-  .teaser[data-variant="feature"] .teaser-dek {
-    font-size: 1rem;
+  .teaser[data-variant="feature"] .teaser-dek,
+  .teaser[data-variant="band"] .teaser-dek {
+    font-size: 0.98rem;
+    -webkit-line-clamp: 4;
   }
   .teaser[data-variant="standard"] .teaser-dek {
-    font-size: 0.89rem;
+    font-size: 0.9rem;
   }
   .teaser-foot {
     display: flex;
@@ -643,7 +715,7 @@
     justify-content: space-between;
     gap: 0.85rem;
     margin-top: auto;
-    padding-top: 0.95rem;
+    padding-top: 0.9rem;
   }
   .teaser-sources {
     font-family: theme("fontFamily.body");
@@ -676,6 +748,27 @@
     .teaser:hover .teaser-arrow {
       transform: translateX(3px);
     }
+  }
+
+  /* Band: photo left / copy right (or flipped). */
+  .teaser[data-variant="band"] {
+    display: grid;
+    gap: 1.25rem 1.75rem;
+    align-items: center;
+  }
+  @media (min-width: 800px) {
+    .teaser[data-variant="band"] {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    }
+    .teaser[data-variant="band"][data-flip="true"] .teaser-media {
+      order: 2;
+    }
+    .teaser[data-variant="band"][data-flip="true"] .teaser-copy {
+      order: 1;
+    }
+  }
+  .teaser[data-variant="band"] .teaser-dek {
+    -webkit-line-clamp: 5;
   }
 
   /* --- "In Brief" rail ------------------------------------------------ */

@@ -50,6 +50,22 @@ export interface StoryBadges {
   impact?: number;
 }
 
+/**
+ * A photograph attached to a story. Newer editions emit Markdown images with an
+ * optional `<sub>` caption line naming the photo credit.
+ */
+export interface StoryImage {
+  /** Public URL path, e.g. `/images/2026-07-29/….jpg`. */
+  src: string;
+  alt: string;
+  /** Caption text with the credit stripped when one was present. */
+  caption?: string;
+  /** Outlet or photographer credit, e.g. "Indian Express". */
+  credit?: string;
+  /** Optional link on the credit. */
+  creditUrl?: string;
+}
+
 export interface Story {
   /** 1-based position within the edition (from "## <n>. ..."). */
   index: number;
@@ -76,6 +92,12 @@ export interface Story {
   claims: Claim[];
   /** Per-story cited outlets, already human-readable. */
   sources: string[];
+  /**
+   * Photographs for this story, in source order. `images[0]` is the lead cut
+   * used on the front page and under the article headline; the rest form the
+   * article gallery. Empty for older image-less editions.
+   */
+  images: StoryImage[];
 }
 
 export interface Edition {

@@ -3,18 +3,19 @@
  * sync-editions
  * -------------
  * The ONLY coupling between this frontend and the GROUNDED backend: it copies
- * the daily edition Markdown files the pipeline writes to `../GROUNDED/output/`
- * into this app's `content/editions/` folder. Nothing else about the backend is
- * imported or called.
+ * the daily edition Markdown files (and their photograph folders) the pipeline
+ * writes to `../GROUNDED/output/` into this app so the site can render them.
  *
  * Contract:
  *   - Backend writes files named exactly `edition-YYYY-MM-DD.md`.
- *   - We copy `edition-*.md` into `content/editions/`.
+ *   - Backend writes photographs under `output/images/<date>/…`.
+ *   - We copy `edition-*.md` into `content/editions/` and `images/` into
+ *     `public/images/` (Next serves that folder as `/images/…`).
  *   - A new edition is just a new file dropped in → rebuild. No code changes.
  *
  * On Vercel / CI the sibling GROUNDED repo is absent. Always commit the editions
- * you want live into `content/editions/`, and use `--allow-missing` (the default
- * for `prebuild`) so the build uses those committed files instead of failing.
+ * (and images) you want live, and use `--allow-missing` (the default for
+ * `prebuild`) so the build uses those committed files instead of failing.
  *
  * Usage:
  *   node scripts/sync-editions.mjs                 # copy, fail loudly if source missing
@@ -34,8 +35,27 @@ const SOURCE_DIR = process.env.SOURCE_DIR
   : path.resolve(repoRoot, "..", "GROUNDED", "output");
 
 const DEST_DIR = path.resolve(repoRoot, "content", "editions");
+const IMAGES_SRC = path.join(SOURCE_DIR, "images");
+const IMAGES_DEST = path.resolve(repoRoot, "public", "images");
 const EDITION_RE = /^edition-\d{4}-\d{2}-\d{2}\.md$/;
 const allowMissing = process.argv.includes("--allow-missing");
+
+async function syncImages() {
+  if (!existsSync(IMAGES_SRC)) return 0;
+  await mkdir(IMAGES_DEST, { recursive: true });
+  // Merge date folders; do not delete local-only images (e.g. committed assets
+  // for an edition the backend no longer holds).
+  const dates = await readdir(IMAGES_SRC);
+  let folders = 0;
+  for (const name of dates) {
+    const from = path.join(IMAGES_SRC, name);
+    const to = path.join(IMAGES_DEST, name);
+    if (!(await stat(from)).isDirectory()) continue;
+    await cp(from, to, { recursive: true });
+    folders += 1;
+  }
+  return folders;
+}
 
 async function main() {
   await mkdir(DEST_DIR, { recursive: true });
@@ -57,10 +77,10 @@ async function main() {
     const msg = `[sync:editions] No edition-YYYY-MM-DD.md files in ${SOURCE_DIR}`;
     if (allowMissing) {
       console.warn(`${msg} — using existing content/editions/.`);
-      return;
+    } else {
+      console.error(msg);
+      process.exit(1);
     }
-    console.error(msg);
-    process.exit(1);
   }
 
   let copied = 0;
@@ -73,8 +93,13 @@ async function main() {
     }
   }
 
+  const imageFolders = await syncImages();
+
   console.log(`[sync:editions] Copied ${copied} edition(s) → content/editions/`);
   for (const name of editions) console.log(`  · ${name}`);
+  if (imageFolders > 0) {
+    console.log(`[sync:editions] Synced ${imageFolders} image folder(s) → public/images/`);
+  }
 }
 
 main().catch((err) => {

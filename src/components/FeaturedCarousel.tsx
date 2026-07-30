@@ -8,6 +8,7 @@ import { cleanDek, storyLede } from "@/lib/content";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
+import { StoryFigure } from "./StoryFigure";
 
 /**
  * How long each featured story holds before the page turns. Long enough to read
@@ -17,11 +18,10 @@ import { Prose } from "./Prose";
 const INTERVAL_MS = 14000;
 
 /**
- * The rotating "front-page banner". It cycles the edition's MOST IMPORTANT
- * stories (lead + features, chosen by lib/importance.ts) with a gentle
- * page-turn, the way a broadsheet's showcase might refresh. Pauses on
- * hover/focus, is fully keyboard-operable, and holds still for reduced-motion
- * readers (who still get every control).
+ * The rotating "front-page banner". Cycles the edition's most important stories
+ * (lead + features) with a gentle page-turn. When a story carries a photograph,
+ * the cut sits beside the copy on a classic broadsheet spread — photo left,
+ * type right — never overlaid.
  */
 export function FeaturedCarousel({
   items,
@@ -57,17 +57,13 @@ export function FeaturedCarousel({
   const rotating = count > 1;
   const dek = cleanDek(story.dek, story.headline);
   const lede = storyLede(story);
+  const lead = story.images[0];
 
   return (
     <section
       aria-roledescription="carousel"
       aria-label="Featured dispatches"
       className="relative"
-      // Note: we deliberately do NOT pause on mouse hover — the hero covers the
-      // whole top of the page, so hover-pausing made the progress bar freeze
-      // "randomly" whenever the cursor rested there. Keyboard focus still pauses
-      // (so controls don't shift under a tabbing user), and the ⏸ button is the
-      // explicit stop mechanism.
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
@@ -94,57 +90,71 @@ export function FeaturedCarousel({
         </div>
       )}
 
-      <div className="relative mt-6 min-h-[23rem] sm:min-h-[20rem]">
+      <div className="relative mt-6 min-h-[22rem]">
         <AnimatePresence mode="wait">
           <motion.article
             key={story.slug}
             initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -12 }}
-            transition={{ duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+            transition={{ duration: 0.45, ease: [0.22, 0.61, 0.36, 1] }}
+            className={lead ? "lead-spread" : undefined}
+            data-has-photo={lead ? "true" : "false"}
           >
-            <div
-              aria-live="polite"
-              className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2"
-            >
-              <ModeStamp mode={story.mode} />
-              <span className="kicker text-sepia">
-                {story.badges.sources} source
-                {story.badges.sources === 1 ? "" : "s"}
-                {story.badges.verified !== undefined && (
-                  <> · {story.badges.verified} verified</>
-                )}
-              </span>
-              <ImpactMeter score={active.score} className="ml-auto" />
-            </div>
-
-            <Link href={href} className="group block">
-              <h2
-                className="headline-shadow font-display font-black leading-[1.02] text-ink transition-opacity group-hover:opacity-80"
-                style={{ fontSize: "clamp(2.1rem, 5.2vw, 3.9rem)" }}
-              >
-                {story.headline}
-              </h2>
-            </Link>
-
-            {dek && (
-              <p className="mt-4 max-w-3xl font-display text-xl italic leading-snug text-sepia">
-                {dek}
-              </p>
-            )}
-
-            {lede && (
-              <div className="mt-5 max-w-3xl">
-                <Prose markdown={lede} />
+            {lead && (
+              <div className="lead-photo">
+                <StoryFigure image={lead} size="hero" priority showCaption />
               </div>
             )}
 
-            <Link
-              href={href}
-              className="ink-link mt-5 inline-block font-body text-sm font-semibold uppercase tracking-wide2 text-oxblood"
-            >
-              Continue reading →
-            </Link>
+            <div className="lead-copy">
+              <div
+                aria-live="polite"
+                className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2"
+              >
+                <ModeStamp mode={story.mode} />
+                <span className="kicker text-sepia">
+                  {story.badges.sources} source
+                  {story.badges.sources === 1 ? "" : "s"}
+                  {story.badges.verified !== undefined && (
+                    <> · {story.badges.verified} verified</>
+                  )}
+                </span>
+                <ImpactMeter score={active.score} className="ml-auto" />
+              </div>
+
+              <Link href={href} className="group block">
+                <h2
+                  className="headline-shadow font-display font-black leading-[1.02] text-ink transition-opacity group-hover:opacity-80"
+                  style={{
+                    fontSize: lead
+                      ? "clamp(1.85rem, 3.8vw, 3.1rem)"
+                      : "clamp(2.1rem, 5.2vw, 3.9rem)",
+                  }}
+                >
+                  {story.headline}
+                </h2>
+              </Link>
+
+              {dek && (
+                <p className="mt-4 max-w-3xl font-display text-lg italic leading-snug text-sepia sm:text-xl">
+                  {dek}
+                </p>
+              )}
+
+              {lede && (
+                <div className="mt-5 max-w-3xl lead-lede">
+                  <Prose markdown={lede} />
+                </div>
+              )}
+
+              <Link
+                href={href}
+                className="ink-link mt-5 inline-block font-body text-sm font-semibold uppercase tracking-wide2 text-oxblood"
+              >
+                Continue reading →
+              </Link>
+            </div>
           </motion.article>
         </AnimatePresence>
       </div>

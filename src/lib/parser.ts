@@ -24,6 +24,7 @@ import type {
   Mode,
   Story,
   StoryBadges,
+  StoryImage,
 } from "./types";
 import { storySlug } from "./slug";
 import { humanizeInlineCitations } from "./humanize";
@@ -285,6 +286,65 @@ function splitSections(block: string): Map<string, string> {
 const SOURCES_RE = /^\*\*Sources:\*\*\s+(.+)$/m;
 
 /**
+ * Resolve a Markdown image path to a site-root public URL. Relative paths like
+ * `images/2026-07-29/….jpg` are served from `public/images/` after sync.
+ */
+export function resolveImageSrc(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return trimmed;
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) return trimmed;
+  if (trimmed.startsWith("/")) return trimmed;
+  return `/${trimmed.replace(/^\.\//, "")}`;
+}
+
+const IMAGE_BLOCK_RE =
+  /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)(?:\s*\n+[ \t]*<sub>\s*\*([\s\S]*?)\*\s*<\/sub>)?/g;
+
+const PHOTO_VIA_RE =
+  /(?:—|–|-)\s*Photo via\s+(?:\[([^\]]+)\]\(([^)]+)\)|([^.*]+))\s*$/i;
+
+/** Pull every photograph (and optional caption/credit) out of a story block. */
+export function parseStoryImages(block: string): StoryImage[] {
+  const images: StoryImage[] = [];
+  for (const match of block.matchAll(IMAGE_BLOCK_RE)) {
+    const alt = (match[1] || "").trim();
+    const src = resolveImageSrc(match[2] || "");
+    if (!src) continue;
+
+    let caption: string | undefined;
+    let credit: string | undefined;
+    let creditUrl: string | undefined;
+
+    const rawCaption = (match[3] || "").trim();
+    if (rawCaption) {
+      const via = rawCaption.match(PHOTO_VIA_RE);
+      if (via) {
+        credit = (via[1] || via[3] || "").trim() || undefined;
+        creditUrl = via[2]?.trim() || undefined;
+        caption = rawCaption.replace(PHOTO_VIA_RE, "").trim() || undefined;
+      } else {
+        caption = rawCaption;
+      }
+    }
+
+    const image: StoryImage = { src, alt: alt || caption || "Photograph" };
+    if (caption) image.caption = caption;
+    if (credit) image.credit = credit;
+    if (creditUrl) image.creditUrl = creditUrl;
+    images.push(image);
+  }
+  return images;
+}
+
+/** Remove image Markdown (and following `<sub>` captions) so prose stays clean. */
+export function stripImages(markdown: string): string {
+  return markdown
+    .replace(IMAGE_BLOCK_RE, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/**
  * A `### Report` (or `### What we know`) section is the last one in a story
  * block, so it absorbs the trailing "**Sources:**" line and any "*Public
  * discussion…*" signal note. Cut those off so only the prose body remains.
@@ -331,17 +391,21 @@ function parseStory(block: string): Story | null {
   const badgeMatch = block.match(BADGE_RE);
   const { mode, badges } = parseBadges(badgeMatch ? badgeMatch[1] : "");
 
+  const images = parseStoryImages(block);
   const sections = splitSections(block);
-  const context = sections.get("Context") ?? "";
+  const context = stripImages(sections.get("Context") ?? "");
 
-  const debate = mode === "debate" ? parseDebate(sections.get("The debate")) : undefined;
+  const debate =
+    mode === "debate"
+      ? parseDebate(stripImages(sections.get("The debate") ?? ""))
+      : undefined;
   const claims = parseClaims(
     mode === "debate" ? sections.get("Grounded points") : sections.get("What we know"),
   );
 
   // Newer report editions carry a full "### Report" narrative; older stub
   // reports don't and lean on `claims` instead.
-  const reportBody = stripTrailingMeta(sections.get("Report") ?? "");
+  const reportBody = stripImages(stripTrailingMeta(sections.get("Report") ?? ""));
   const report = reportBody ? humanizeInlineCitations(reportBody) : undefined;
 
   const story: Story = {
@@ -355,6 +419,7 @@ function parseStory(block: string): Story | null {
     context,
     claims,
     sources: parseSources(block),
+    images,
   };
 
   if (report) story.report = report;
