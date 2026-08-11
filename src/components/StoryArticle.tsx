@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Edition, Story } from "@/lib/types";
 import { cleanDek, hasContextBody, reconstructionNote, splitContext } from "@/lib/content";
 import { editionPath, storyPath } from "@/lib/i18n";
+import { claimsKeptLabel, sourceCountLabel, t } from "@/lib/ui-i18n";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { SectionLabel } from "./SectionLabel";
@@ -11,13 +12,13 @@ import { ClaimList } from "./ClaimList";
 import { CitedSources } from "./CitedSources";
 import { StoryFigure } from "./StoryFigure";
 
-function BadgeLine({ story }: { story: Story }) {
+function BadgeLine({ story, lang }: { story: Story; lang: string }) {
   const parts: string[] = [
-    `${story.badges.sources} source${story.badges.sources === 1 ? "" : "s"}`,
-    `${story.badges.claimsKept} claim${story.badges.claimsKept === 1 ? "" : "s"} kept`,
+    sourceCountLabel(lang, story.badges.sources),
+    claimsKeptLabel(lang, story.badges.claimsKept),
   ];
   if (story.badges.verified !== undefined) {
-    parts.push(`${story.badges.verified} verified`);
+    parts.push(t(lang, "verified", { n: story.badges.verified }));
   }
   return <span className="kicker text-sepia">{parts.join("  ·  ")}</span>;
 }
@@ -44,11 +45,14 @@ export function StoryArticle({
   return (
     <article className="mx-auto w-full max-w-[62rem] px-5 pb-10 pt-10 sm:px-8">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-        <ModeStamp mode={story.mode} />
-        <BadgeLine story={story} />
-        {score !== undefined && <ImpactMeter score={score} />}
+        <ModeStamp mode={story.mode} lang={lang} />
+        <BadgeLine story={story} lang={lang} />
+        {score !== undefined && <ImpactMeter score={score} lang={lang} />}
         <span className="kicker ml-auto text-sepia-light">
-          No. {story.index} of {edition.stories.length}
+          {t(lang, "story.of", {
+            n: story.index,
+            total: edition.stories.length,
+          })}
         </span>
       </div>
 
@@ -84,7 +88,7 @@ export function StoryArticle({
 
       {hasContextBody(story.context) ? (
         <section className="mt-8 max-w-[44rem]">
-          <SectionLabel>Context</SectionLabel>
+          <SectionLabel>{t(lang, "section.context")}</SectionLabel>
           <Prose markdown={body} dropCap={!story.report} />
         </section>
       ) : story.report ? null : (
@@ -95,30 +99,38 @@ export function StoryArticle({
 
       {story.report && (
         <section className="mt-10 max-w-[44rem]">
-          <SectionLabel>Report</SectionLabel>
+          <SectionLabel>{t(lang, "section.report")}</SectionLabel>
           <Prose markdown={story.report} dropCap />
         </section>
       )}
 
       {story.mode === "debate" && story.debate ? (
         <section className="mt-12">
-          <SectionLabel>The debate</SectionLabel>
-          <DebateSpread debate={story.debate} />
+          <SectionLabel>{t(lang, "section.debate")}</SectionLabel>
+          <DebateSpread debate={story.debate} lang={lang} />
         </section>
       ) : null}
 
       {story.claims.length > 0 && (
         <section className="mt-12 max-w-[46rem]">
           <SectionLabel>
-            {story.mode === "debate" ? "Grounded points" : "What we know"}
+            {t(
+              lang,
+              story.mode === "debate"
+                ? "section.grounded"
+                : "section.whatWeKnow",
+            )}
           </SectionLabel>
-          <ClaimList claims={story.claims} />
+          <ClaimList claims={story.claims} lang={lang} />
         </section>
       )}
 
       {gallery.length > 0 && (
-        <section className="mt-12 max-w-[52rem]" aria-label="Photographs">
-          <SectionLabel>Photographs</SectionLabel>
+        <section
+          className="mt-12 max-w-[52rem]"
+          aria-label={t(lang, "section.photos")}
+        >
+          <SectionLabel>{t(lang, "section.photos")}</SectionLabel>
           <div className="photo-gallery">
             {gallery.map((image) => (
               <StoryFigure key={image.src} image={image} size="inline" />
@@ -128,11 +140,11 @@ export function StoryArticle({
       )}
 
       <div className="max-w-[46rem]">
-        <CitedSources sources={story.sources} />
+        <CitedSources sources={story.sources} lang={lang} />
       </div>
 
       <nav
-        aria-label="Story navigation"
+        aria-label={t(lang, "nav.storyAria")}
         className="mt-14 grid grid-cols-1 gap-4 border-t-2 border-ink/80 pt-6 sm:grid-cols-3 sm:items-start"
       >
         <div className="sm:justify-self-start">
@@ -141,19 +153,23 @@ export function StoryArticle({
               href={storyPath(edition.date, prev.slug, lang)}
               className="group block max-w-xs"
             >
-              <span className="kicker text-sepia-light">← Previous</span>
+              <span className="kicker text-sepia-light">
+                {t(lang, "nav.prev")}
+              </span>
               <span className="mt-1 block font-display text-base leading-snug text-ink group-hover:text-oxblood">
                 {prev.headline}
               </span>
             </Link>
           ) : (
-            <span className="kicker text-sepia-light/60">← Previous</span>
+            <span className="kicker text-sepia-light/60">
+              {t(lang, "nav.prev")}
+            </span>
           )}
         </div>
 
         <div className="text-center sm:justify-self-center">
           <Link href={editionHref} className="nav-link">
-            Back to the edition
+            {t(lang, "nav.backEdition")}
           </Link>
         </div>
 
@@ -163,13 +179,17 @@ export function StoryArticle({
               href={storyPath(edition.date, next.slug, lang)}
               className="group block max-w-xs sm:ml-auto"
             >
-              <span className="kicker text-sepia-light">Next →</span>
+              <span className="kicker text-sepia-light">
+                {t(lang, "nav.next")}
+              </span>
               <span className="mt-1 block font-display text-base leading-snug text-ink group-hover:text-oxblood">
                 {next.headline}
               </span>
             </Link>
           ) : (
-            <span className="kicker text-sepia-light/60">Next →</span>
+            <span className="kicker text-sepia-light/60">
+              {t(lang, "nav.next")}
+            </span>
           )}
         </div>
       </nav>

@@ -1,18 +1,26 @@
 import Link from "next/link";
 import type { Lang } from "@/lib/i18n";
+import { DEFAULT_LANG } from "@/lib/i18n";
+import { t } from "@/lib/ui-i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type NavKey = "front" | "archive" | "about" | null;
 
-function MastheadNav({ active }: { active: NavKey }) {
+function MastheadNav({
+  active,
+  lang,
+}: {
+  active: NavKey;
+  lang: Lang;
+}) {
   const items: { href: string; label: string; key: NavKey }[] = [
-    { href: "/", label: "Front Page", key: "front" },
-    { href: "/archive", label: "Archive", key: "archive" },
-    { href: "/about", label: "Method", key: "about" },
+    { href: "/", label: t(lang, "nav.front"), key: "front" },
+    { href: "/archive", label: t(lang, "nav.archive"), key: "archive" },
+    { href: "/about", label: t(lang, "nav.method"), key: "about" },
   ];
   return (
     <nav
-      aria-label="Sections"
+      aria-label={t(lang, "nav.sections")}
       className="flex items-center justify-center gap-x-7 gap-y-2 py-2.5"
     >
       {items.map((item) => (
@@ -31,16 +39,16 @@ function MastheadNav({ active }: { active: NavKey }) {
 }
 
 /** Slim notice under the nameplate — scrolls to the Letters box in the footer. */
-function ReaderNotice() {
+function ReaderNotice({ lang }: { lang: Lang }) {
   return (
     <a href="#correspondence" className="reader-notice group">
       <span className="reader-notice-stamp" aria-hidden="true">
-        Notice
+        {t(lang, "notice.stamp")}
       </span>
       <span className="reader-notice-copy">
         <span className="reader-notice-ask">
-          Have we kept you grounded?{" "}
-          <span className="reader-notice-jump">Tell us ↓</span>
+          {t(lang, "notice.ask")}{" "}
+          <span className="reader-notice-jump">{t(lang, "notice.jump")}</span>
         </span>
       </span>
     </a>
@@ -71,7 +79,7 @@ export function Masthead({
   issueNumber,
   active = null,
   date,
-  lang,
+  lang = DEFAULT_LANG,
   availableLangs,
   storyIndex,
   storySlugsByLang,
@@ -79,7 +87,7 @@ export function Masthead({
 }: MastheadProps) {
   const isFull = variant === "full";
   const switcher =
-    date && lang && availableLangs && availableLangs.length > 1 ? (
+    date && availableLangs && availableLangs.length > 1 ? (
       <LanguageSwitcher
         date={date}
         lang={lang}
@@ -99,15 +107,14 @@ export function Masthead({
           <span className="kicker !text-[0.6rem]">
             Vol. I{issueNumber ? ` · No. ${issueNumber}` : ""}
           </span>
-          {switcher}
-          <span className="kicker !text-[0.6rem]">Est. MMXXVI</span>
+          <span className="kicker !text-[0.6rem]">{t(lang, "masthead.est")}</span>
         </div>
       )}
 
       <div className={isFull ? "pt-3 text-center" : "pt-4 text-center"}>
         <Link
           href="/"
-          aria-label="The Grounded Times — front page"
+          aria-label={t(lang, "masthead.brandAria")}
           className="inline-block"
         >
           <span
@@ -142,27 +149,32 @@ export function Masthead({
           <div className="flex flex-col items-center gap-1 pt-3 text-center">
             <p className="kicker text-ink">
               {humanDate ? `${humanDate} · ` : ""}
-              {issueNumber ? `No. ${issueNumber} · ` : ""}Fact-grounded ·
-              Auditable
+              {issueNumber ? `No. ${issueNumber} · ` : ""}
+              {t(lang, "masthead.factline")}
             </p>
             <p className="font-display text-[1rem] italic text-sepia">
-              Someone has to keep you grounded.
+              {t(lang, "masthead.motto")}
             </p>
           </div>
+          {switcher && (
+            <>
+              <hr className="rule-hair mt-3" />
+              <div className="lang-switcher-bar">{switcher}</div>
+            </>
+          )}
           <hr className="rule-hair mt-3" />
-          <MastheadNav active={active} />
+          <MastheadNav active={active} lang={lang} />
           <hr className="rule-thick" />
-          <ReaderNotice />
+          <ReaderNotice lang={lang} />
         </>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3 py-1">
-            <div className="flex-1" />
-            <MastheadNav active={active} />
-            <div className="flex flex-1 justify-end">{switcher}</div>
+          {switcher && <div className="lang-switcher-bar">{switcher}</div>}
+          <div className="flex items-center justify-center gap-3 py-1">
+            <MastheadNav active={active} lang={lang} />
           </div>
           <hr className="rule-hair" />
-          <ReaderNotice />
+          <ReaderNotice lang={lang} />
         </>
       )}
     </header>

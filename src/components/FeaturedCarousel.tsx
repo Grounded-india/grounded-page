@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { RankedStory } from "@/lib/importance";
 import { cleanDek, storyLede } from "@/lib/content";
 import { DEFAULT_LANG, normalizeLang, storyPath } from "@/lib/i18n";
+import { sourceCountLabel, t } from "@/lib/ui-i18n";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
@@ -65,14 +66,17 @@ export function FeaturedCarousel({
   return (
     <section
       aria-roledescription="carousel"
-      aria-label="Featured dispatches"
+      aria-label={t(lang, "carousel.aria")}
       className="relative"
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
       <div className="flex items-baseline justify-between gap-4">
         <span className="kicker text-oxblood">
-          {active.tier === "lead" ? "The lead" : "Featured"} — by importance
+          {t(
+            lang,
+            active.tier === "lead" ? "carousel.lead" : "carousel.featured",
+          )}
         </span>
         {rotating && (
           <span className="kicker tabular-nums text-sepia-light">
@@ -115,15 +119,18 @@ export function FeaturedCarousel({
                 aria-live="polite"
                 className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2"
               >
-                <ModeStamp mode={story.mode} />
+                <ModeStamp mode={story.mode} lang={lang} />
                 <span className="kicker text-sepia">
-                  {story.badges.sources} source
-                  {story.badges.sources === 1 ? "" : "s"}
+                  {sourceCountLabel(lang, story.badges.sources)}
                   {story.badges.verified !== undefined && (
-                    <> · {story.badges.verified} verified</>
+                    <> · {t(lang, "verified", { n: story.badges.verified })}</>
                   )}
                 </span>
-                <ImpactMeter score={active.score} className="ml-auto" />
+                <ImpactMeter
+                  score={active.score}
+                  lang={lang}
+                  className="ml-auto"
+                />
               </div>
 
               <Link href={href} className="group block">
@@ -155,7 +162,7 @@ export function FeaturedCarousel({
                 href={href}
                 className="ink-link mt-5 inline-block font-body text-sm font-semibold uppercase tracking-wide2 text-oxblood"
               >
-                Continue reading →
+                {t(lang, "carousel.continue")}
               </Link>
             </div>
           </motion.article>
@@ -168,7 +175,7 @@ export function FeaturedCarousel({
             <button
               type="button"
               onClick={() => goTo(index - 1)}
-              aria-label="Previous featured story"
+              aria-label={t(lang, "carousel.prev")}
               className="ctrl-btn"
             >
               ←
@@ -177,9 +184,10 @@ export function FeaturedCarousel({
               <button
                 type="button"
                 onClick={() => setPaused((p) => !p)}
-                aria-label={
-                  paused ? "Resume auto-rotation" : "Pause auto-rotation"
-                }
+                aria-label={t(
+                  lang,
+                  paused ? "carousel.resume" : "carousel.pause",
+                )}
                 aria-pressed={paused}
                 className="ctrl-btn !text-[0.65rem]"
               >
@@ -189,7 +197,7 @@ export function FeaturedCarousel({
             <button
               type="button"
               onClick={() => goTo(index + 1)}
-              aria-label="Next featured story"
+              aria-label={t(lang, "carousel.next")}
               className="ctrl-btn"
             >
               →
@@ -198,7 +206,7 @@ export function FeaturedCarousel({
 
           <div
             role="tablist"
-            aria-label="Select a featured story"
+            aria-label={t(lang, "carousel.select")}
             className="flex items-center gap-2"
           >
             {items.map((r, i) => (

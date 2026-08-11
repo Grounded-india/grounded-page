@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Edition } from "@/lib/types";
 import { layoutEdition, type RankedStory } from "@/lib/importance";
+import { t } from "@/lib/ui-i18n";
 import { FeaturedCarousel } from "./FeaturedCarousel";
 import { StoryTeaser } from "./StoryTeaser";
 import { BriefsList } from "./BriefsList";
@@ -11,16 +12,16 @@ const SECOND_LEADS = 2;
 const PHOTO_BANDS = 2;
 
 /** The ruled section header that opens everything below the hero. */
-function DeckHeader({ count }: { count: number }) {
+function DeckHeader({ count, lang }: { count: number; lang: string }) {
   return (
     <div className="deck-head">
-      <h2 className="deck-title">In this edition</h2>
+      <h2 className="deck-title">{t(lang, "deck.title")}</h2>
       <p className="deck-note">
-        {count} more dispatch{count === 1 ? "" : "es"}
+        {t(lang, "deck.more", { n: count })}
         <span className="deck-sep" aria-hidden="true">
           ·
         </span>
-        ordered by importance
+        {t(lang, "deck.ordered")}
       </p>
     </div>
   );
@@ -70,13 +71,13 @@ export function FrontPage({ edition }: { edition: Edition }) {
     return (
       <div className="mx-auto max-w-measure px-5 py-16 text-center">
         <p className="font-display text-2xl italic text-sepia">
-          No stories were grounded in this edition.
+          {t(lang, "empty.noStories")}
         </p>
         <Link
           href="/archive"
           className="ink-link mt-4 inline-block font-body text-xs uppercase tracking-wide2 text-oxblood"
         >
-          Browse the back issues →
+          {t(lang, "empty.browseArchive")}
         </Link>
       </div>
     );
@@ -151,15 +152,20 @@ export function FrontPage({ edition }: { edition: Edition }) {
       <FeaturedCarousel items={featured} date={edition.date} lang={lang} />
 
       {remaining > 0 && (
-        <section aria-label="The rest of this edition" className="edition-body">
+        <section aria-label={t(lang, "deck.restAria")} className="edition-body">
           <hr className="rule-thick mt-10" />
-          <DeckHeader count={remaining} />
+          <DeckHeader count={remaining} lang={lang} />
 
           {hasBriefs ? (
             <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
               <div>{main}</div>
               <div className="briefs-rail">
-                <BriefsList items={briefs} date={edition.date} lang={lang} />
+                <BriefsList
+                  items={briefs}
+                  date={edition.date}
+                  lang={lang}
+                  heading={t(lang, "briefs.title")}
+                />
               </div>
             </div>
           ) : (

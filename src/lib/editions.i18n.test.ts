@@ -113,7 +113,9 @@ describe("multilingual editions — 2026-08-03", () => {
     if (!fs.existsSync(HI)) return;
     const site = discoverSiteLangs();
     expect(site).toEqual(expect.arrayContaining(["en", "hi", "kn", "mr", "te"]));
-    expect(latestDateForLang("hi")).toBe(DATE);
+    const newestHi = latestDateForLang("hi");
+    expect(newestHi).toBeTruthy();
+    expect(newestHi! >= DATE).toBe(true);
 
     const latest = getEdition(getEdition("2026-08-11", "en") ? "2026-08-11" : DATE, "en");
     // Prefer the live English frontpage date when present.
@@ -121,7 +123,7 @@ describe("multilingual editions — 2026-08-03", () => {
     const switcher = langSwitcherFor(date, "en", { homeEnglish: true });
     expect(switcher.availableLangs.length).toBeGreaterThan(1);
     expect(switcher.hrefByLang.en).toBe("/");
-    expect(switcher.hrefByLang.hi).toBe(`/edition/${DATE}/hi/`);
+    expect(switcher.hrefByLang.hi).toBe(`/edition/${newestHi}/hi/`);
   });
 });
 

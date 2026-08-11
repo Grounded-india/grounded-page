@@ -10,6 +10,7 @@ import {
   storyPath,
   type Lang,
 } from "@/lib/i18n";
+import { t } from "@/lib/ui-i18n";
 
 interface LanguageSwitcherProps {
   date: string;
@@ -28,8 +29,8 @@ interface LanguageSwitcherProps {
 }
 
 /**
- * Compact language switcher. Persists the choice in localStorage and navigates
- * to the matching static edition/story route for the selected language.
+ * Language switcher with a visible label. Persists the choice in localStorage
+ * and navigates to the matching static edition/story route.
  */
 export function LanguageSwitcher({
   date,
@@ -69,34 +70,45 @@ export function LanguageSwitcher({
     <div
       className={`lang-switcher ${className}`.trim()}
       role="navigation"
-      aria-label="Language"
+      aria-label={t(lang, "lang.aria")}
     >
-      {langs.map((code) => {
-        const meta = LANG_META[code];
-        const active = code === lang;
-        return (
-          <a
-            key={code}
-            href={hrefFor(code)}
-            lang={meta.htmlLang}
-            className="lang-switcher-link"
-            data-active={active ? "true" : undefined}
-            aria-current={active ? "true" : undefined}
-            title={meta.englishName}
-            onClick={(e) => {
-              e.preventDefault();
-              try {
-                window.localStorage.setItem(LANG_STORAGE_KEY, code);
-              } catch {
-                /* ignore */
-              }
-              router.push(hrefFor(code));
-            }}
-          >
-            {code === DEFAULT_LANG ? "EN" : meta.label}
-          </a>
-        );
-      })}
+      <span className="lang-switcher-label" aria-hidden="true">
+        {t(lang, "lang.label")}
+        <span className="lang-switcher-label-en"> / Language</span>
+      </span>
+      <div className="lang-switcher-chips">
+        {langs.map((code) => {
+          const meta = LANG_META[code];
+          const active = code === lang;
+          return (
+            <a
+              key={code}
+              href={hrefFor(code)}
+              lang={meta.htmlLang}
+              className="lang-switcher-link"
+              data-active={active ? "true" : undefined}
+              aria-current={active ? "true" : undefined}
+              title={meta.englishName}
+              onClick={(e) => {
+                e.preventDefault();
+                try {
+                  window.localStorage.setItem(LANG_STORAGE_KEY, code);
+                } catch {
+                  /* ignore */
+                }
+                router.push(hrefFor(code));
+              }}
+            >
+              <span className="lang-switcher-native">
+                {code === DEFAULT_LANG ? "English" : meta.label}
+              </span>
+              <span className="lang-switcher-code" aria-hidden="true">
+                {code.toUpperCase()}
+              </span>
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }

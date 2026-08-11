@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Story } from "@/lib/types";
 import { teaserBlurb } from "@/lib/content";
 import { DEFAULT_LANG, normalizeLang, storyPath } from "@/lib/i18n";
+import { sourceCountLabel, t } from "@/lib/ui-i18n";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { StoryFigure } from "./StoryFigure";
@@ -9,10 +10,9 @@ import { StoryFigure } from "./StoryFigure";
 export type TeaserVariant = "feature" | "standard" | "band";
 
 /** Named outlets when the story cites any, otherwise the counted badge. */
-function sourceLine(story: Story): string {
+function sourceLine(story: Story, lang: string): string {
   if (story.sources.length > 0) return story.sources.join(" · ");
-  const n = story.badges.sources;
-  return `${n} source${n === 1 ? "" : "s"}`;
+  return sourceCountLabel(lang, story.badges.sources);
 }
 
 /**
@@ -43,7 +43,7 @@ export function StoryTeaser({
 }) {
   const href = storyPath(date, story.slug, normalizeLang(lang));
   const blurb = teaserBlurb(story);
-  const sources = sourceLine(story);
+  const sources = sourceLine(story, lang);
   const lead = story.images[0];
   const hasPhoto = Boolean(lead);
 
@@ -72,9 +72,14 @@ export function StoryTeaser({
               {String(ordinal).padStart(2, "0")}
             </span>
           )}
-          <ModeStamp mode={story.mode} />
+          <ModeStamp mode={story.mode} lang={lang} />
           {score !== undefined && (
-            <ImpactMeter score={score} showLabel={false} className="ml-auto" />
+            <ImpactMeter
+              score={score}
+              lang={lang}
+              showLabel={false}
+              className="ml-auto"
+            />
           )}
         </div>
 
@@ -89,7 +94,8 @@ export function StoryTeaser({
         <div className="teaser-foot">
           <span className="teaser-sources">{sources}</span>
           <span className="teaser-read" aria-hidden="true">
-            Read <span className="teaser-arrow">→</span>
+            {t(lang, "teaser.read")}{" "}
+            <span className="teaser-arrow">→</span>
           </span>
         </div>
       </div>

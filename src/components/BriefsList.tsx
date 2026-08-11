@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { RankedStory } from "@/lib/importance";
 import { DEFAULT_LANG, normalizeLang, storyPath } from "@/lib/i18n";
+import { sourceCountLabel, t } from "@/lib/ui-i18n";
 
 /**
  * The "In Brief" rail — terse, single-source items (raw official filings, lone
@@ -11,7 +12,7 @@ export function BriefsList({
   items,
   date,
   lang = DEFAULT_LANG,
-  heading = "In Brief",
+  heading,
 }: {
   items: RankedStory[];
   date: string;
@@ -19,10 +20,11 @@ export function BriefsList({
   heading?: string;
 }) {
   if (items.length === 0) return null;
+  const title = heading ?? t(lang, "briefs.title");
 
   return (
-    <aside aria-label="News in brief" className="briefs">
-      <h3 className="briefs-title">{heading}</h3>
+    <aside aria-label={t(lang, "briefs.aria")} className="briefs">
+      <h3 className="briefs-title">{title}</h3>
       <ul>
         {items.map(({ story }) => (
           <li key={story.slug} className="brief-item">
@@ -31,7 +33,7 @@ export function BriefsList({
               className="group block"
             >
               <span className="brief-mode" data-mode={story.mode}>
-                {story.mode === "report" ? "Report" : "Debate"}
+                {t(lang, story.mode === "report" ? "mode.report" : "mode.debate")}
               </span>
               <span className="brief-headline group-hover:text-oxblood">
                 {story.headline}
@@ -39,9 +41,7 @@ export function BriefsList({
               <span className="brief-meta">
                 {story.sources.length > 0
                   ? story.sources.join(" · ")
-                  : `${story.badges.sources} source${
-                      story.badges.sources === 1 ? "" : "s"
-                    }`}
+                  : sourceCountLabel(lang, story.badges.sources)}
               </span>
             </Link>
           </li>

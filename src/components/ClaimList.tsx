@@ -1,4 +1,6 @@
 import type { Claim } from "@/lib/types";
+import { DEFAULT_LANG } from "@/lib/i18n";
+import { t } from "@/lib/ui-i18n";
 import { PrimarySeal } from "./PrimarySeal";
 
 /**
@@ -6,7 +8,13 @@ import { PrimarySeal } from "./PrimarySeal";
  * Each claim shows its text, its cited outlets, and, when backed by a primary
  * or official source, a gold seal.
  */
-export function ClaimList({ claims }: { claims: Claim[] }) {
+export function ClaimList({
+  claims,
+  lang = DEFAULT_LANG,
+}: {
+  claims: Claim[];
+  lang?: string;
+}) {
   if (!claims || claims.length === 0) return null;
   return (
     <ol className="mt-4 space-y-0">
@@ -37,9 +45,15 @@ export function ClaimList({ claims }: { claims: Claim[] }) {
             <div className="flex shrink-0 flex-col items-center gap-1 pl-1 text-center">
               <PrimarySeal size={40} />
               <span className="kicker !text-[0.52rem] !tracking-[0.14em] text-gold-deep">
-                Primary
-                <br />
-                source
+                {lang === "en" ? (
+                  <>
+                    Primary
+                    <br />
+                    source
+                  </>
+                ) : (
+                  t(lang, "claim.primary")
+                )}
               </span>
             </div>
           )}

@@ -4,6 +4,7 @@ import { getIssueNumber, getLatestEdition, langSwitcherFor } from "@/lib/edition
 import { storyLede } from "@/lib/content";
 import { DEFAULT_LANG } from "@/lib/i18n";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import { t } from "@/lib/ui-i18n";
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
 import { HtmlLang } from "@/components/HtmlLang";
@@ -98,7 +99,7 @@ export default function HomePage() {
       <FrontPage edition={edition} />
       <div className="mx-auto w-full max-w-broadsheet px-5 pb-4 text-center sm:px-8">
         <Link href="/archive" className="nav-link">
-          Read the back-issues →
+          {t(edition.lang, "home.backIssues")}
         </Link>
       </div>
     </>
