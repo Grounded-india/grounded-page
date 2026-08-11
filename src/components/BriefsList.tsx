@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { RankedStory } from "@/lib/importance";
+import { DEFAULT_LANG, normalizeLang, storyPath } from "@/lib/i18n";
 
 /**
  * The "In Brief" rail — terse, single-source items (raw official filings, lone
@@ -9,10 +10,12 @@ import type { RankedStory } from "@/lib/importance";
 export function BriefsList({
   items,
   date,
+  lang = DEFAULT_LANG,
   heading = "In Brief",
 }: {
   items: RankedStory[];
   date: string;
+  lang?: string;
   heading?: string;
 }) {
   if (items.length === 0) return null;
@@ -23,7 +26,10 @@ export function BriefsList({
       <ul>
         {items.map(({ story }) => (
           <li key={story.slug} className="brief-item">
-            <Link href={`/story/${date}/${story.slug}`} className="group block">
+            <Link
+              href={storyPath(date, story.slug, normalizeLang(lang))}
+              className="group block"
+            >
               <span className="brief-mode" data-mode={story.mode}>
                 {story.mode === "report" ? "Report" : "Debate"}
               </span>

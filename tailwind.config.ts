@@ -30,8 +30,24 @@ const config: Config = {
       },
       fontFamily: {
         masthead: ["var(--font-masthead)", "var(--font-display)", "serif"],
-        display: ["var(--font-display)", "Georgia", "Times New Roman", "serif"],
-        body: ["var(--font-body)", "Georgia", "Times New Roman", "serif"],
+        display: [
+          "var(--font-display)",
+          "var(--font-noto-deva)",
+          "var(--font-noto-kannada)",
+          "var(--font-noto-telugu)",
+          "Georgia",
+          "Times New Roman",
+          "serif",
+        ],
+        body: [
+          "var(--font-body)",
+          "var(--font-noto-deva)",
+          "var(--font-noto-kannada)",
+          "var(--font-noto-telugu)",
+          "Georgia",
+          "Times New Roman",
+          "serif",
+        ],
       },
       maxWidth: {
         broadsheet: "78rem",

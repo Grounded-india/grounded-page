@@ -35,3 +35,20 @@ yarn-error.log*
 
 # large source asset (the master paper scan) — the optimized copy lives in public/textures
 /image.png
+
+# macOS Finder "Copy" duplicates (foo 2.jpg)
+**/[ ][0-9].*
+
+# macOS Finder duplicate copies ("file 2.jpg", "file 3.png", …)
+*[ ][0-9].jpg
+*[ ][0-9].jpeg
+*[ ][0-9].png
+*[ ][0-9].webp
+*[ ][0-9].gif
+*[ ][0-9].md
+*[ ][0-9][0-9].jpg
+*[ ][0-9][0-9].jpeg
+*[ ][0-9][0-9].png
+*[ ][0-9][0-9].webp
+*[ ][0-9][0-9].gif
+*[ ][0-9][0-9].md

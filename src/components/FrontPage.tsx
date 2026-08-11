@@ -30,10 +30,12 @@ function PhotoGrid({
   items,
   date,
   startOrdinal,
+  lang,
 }: {
   items: RankedStory[];
   date: string;
   startOrdinal: number;
+  lang?: string;
 }) {
   if (items.length === 0) return null;
   return (
@@ -43,6 +45,7 @@ function PhotoGrid({
           key={r.story.slug}
           story={r.story}
           date={date}
+          lang={lang}
           score={r.score}
           ordinal={startOrdinal + i}
           variant="standard"
@@ -62,6 +65,7 @@ function PhotoGrid({
  * Every placement is decided by lib/importance.ts — nothing is positioned by hand.
  */
 export function FrontPage({ edition }: { edition: Edition }) {
+  const lang = edition.lang;
   if (edition.stories.length === 0) {
     return (
       <div className="mx-auto max-w-measure px-5 py-16 text-center">
@@ -110,6 +114,7 @@ export function FrontPage({ edition }: { edition: Edition }) {
               key={r.story.slug}
               story={r.story}
               date={edition.date}
+              lang={lang}
               score={r.score}
               ordinal={firstOrdinal + i}
               variant="feature"
@@ -123,6 +128,7 @@ export function FrontPage({ edition }: { edition: Edition }) {
           <StoryTeaser
             story={r.story}
             date={edition.date}
+            lang={lang}
             score={r.score}
             ordinal={bandOrdinal + i}
             variant="band"
@@ -131,13 +137,18 @@ export function FrontPage({ edition }: { edition: Edition }) {
         </div>
       ))}
 
-      <PhotoGrid items={rest} date={edition.date} startOrdinal={restOrdinal} />
+      <PhotoGrid
+        items={rest}
+        date={edition.date}
+        startOrdinal={restOrdinal}
+        lang={lang}
+      />
     </>
   );
 
   return (
     <div className="mx-auto w-full max-w-broadsheet px-5 pb-6 pt-8 sm:px-8">
-      <FeaturedCarousel items={featured} date={edition.date} />
+      <FeaturedCarousel items={featured} date={edition.date} lang={lang} />
 
       {remaining > 0 && (
         <section aria-label="The rest of this edition" className="edition-body">
@@ -148,7 +159,7 @@ export function FrontPage({ edition }: { edition: Edition }) {
             <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-[minmax(0,1fr)_16rem]">
               <div>{main}</div>
               <div className="briefs-rail">
-                <BriefsList items={briefs} date={edition.date} />
+                <BriefsList items={briefs} date={edition.date} lang={lang} />
               </div>
             </div>
           ) : (

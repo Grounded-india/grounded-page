@@ -21,11 +21,13 @@ import type {
   Debate,
   DebateTurn,
   Edition,
+  Lang,
   Mode,
   Story,
   StoryBadges,
   StoryImage,
 } from "./types";
+import { DEFAULT_LANG } from "./i18n";
 import { storySlug } from "./slug";
 import { humanizeInlineCitations } from "./humanize";
 
@@ -124,11 +126,17 @@ function parseHeader(headerBlock: string, isoDate: string): HeaderInfo {
     new RegExp(`^${WEEKDAYS},`).test(p),
   );
   const dateWithYear = parts.find(
-    (p) => /\b\d{4}\b/.test(p) && /[A-Za-z]/.test(p) && !/stor(?:y|ies)/i.test(p),
+    (p) =>
+      /\b\d{4}\b/.test(p) &&
+      !/^\d+\s+\S+$/.test(p) &&
+      !/stor(?:y|ies)/i.test(p),
   );
   const humanDate = dateWeekday || dateWithYear || formatHumanDate(isoDate);
 
-  const countMatch = inner.match(/(\d+)\s+stor(?:y|ies)/i);
+  // English "25 stories", or translated chrome ("25 स्टोरीज़", …).
+  const countMatch =
+    inner.match(/(\d+)\s+stor(?:y|ies)/i) ||
+    inner.match(/(\d+)\s+\S+\s*$/);
   const storyCount = countMatch ? Number(countMatch[1]) : null;
 
   return { humanDate, storyCount };
@@ -136,14 +144,18 @@ function parseHeader(headerBlock: string, isoDate: string): HeaderInfo {
 
 const BADGE_RE = /^>\s*(.+)$/m;
 
+/** Tokens that mark debate mode in English or common Indic translations. */
+const DEBATE_MODE_RE =
+  /debate|डिबेट|बहस|चर्चा|वाद|ಚರ್ಚೆ|చర్చ|డిబేట్|விவாதம்|বিতর্ক|ચર્ચા|ਚਰਚਾ|مناظرہ/i;
+
 function parseBadges(badgeBody: string): { mode: Mode; badges: StoryBadges } {
   const tokens = badgeBody
     .split("·")
     .map((t) => t.trim())
     .filter(Boolean);
 
-  const modeToken = (tokens[0] || "").toUpperCase();
-  const mode: Mode = modeToken.includes("DEBATE") ? "debate" : "report";
+  const modeToken = tokens[0] || "";
+  const mode: Mode = DEBATE_MODE_RE.test(modeToken) ? "debate" : "report";
 
   let sources = 0;
   let claimsKept = 0;
@@ -152,11 +164,13 @@ function parseBadges(badgeBody: string): { mode: Mode; badges: StoryBadges } {
   let impact: number | undefined;
 
   for (const token of tokens) {
-    const s = token.match(/(\d+)\s+sources?/i);
+    const s = token.match(/(\d+)\s+(?:sources?|सोर्स|स्रोत|स्त्रोत|ಮೂಲ|మూల)/i);
     if (s) sources = Number(s[1]);
-    const c = token.match(/(\d+)\s+claim/i);
+    const c = token.match(
+      /(\d+)\s+(?:claim|दाव|दावे|ಹೇಳಿಕೆ|వాదన)/i,
+    );
     if (c) claimsKept = Number(c[1]);
-    const v = token.match(/(\d+)\s+verified/i);
+    const v = token.match(/(\d+)\s+(?:verified|सत्यापित|ಪರಿಶೀಲಿತ)/i);
     if (v) verified = Number(v[1]);
     // Optional explicit importance score, if the backend adds one later.
     const i = token.match(/(?:impact|priority|score)\s*[:=]?\s*(\d+)/i);
@@ -233,7 +247,12 @@ function parseDebate(section: string | undefined): Debate | undefined {
       i + 1 < heads.length ? (heads[i + 1].index ?? section.length) : section.length;
     const body = humanizeInlineCitations(section.slice(bodyStart, bodyEnd).trim());
 
-    if (/^bottom\s+line\b/i.test(header)) {
+    if (
+      /^bottom\s+line\b/i.test(header) ||
+      /^(?:निष्कर्ष|తుది\s*గమనిక|బాటమ్\s*లైన్|ಮುಗింపು|एकूण|सारांश)\b/i.test(
+        header,
+      )
+    ) {
       bottomLine = body;
       continue;
     }
@@ -261,6 +280,75 @@ function parseDebate(section: string | undefined): Debate | undefined {
 
 const SECTION_HEADING_RE = /^###\s+(.+?)\s*$/;
 
+/**
+ * Canonical section keys the rest of the parser looks up. Translated editions
+ * rename these headings; map every known alias back to English keys so one
+ * parse path works for en/hi/kn/mr/te (and leftovers fall through as-is).
+ */
+function canonicalizeSection(name: string): string {
+  // Strip parenthetical English leftovers: "पार्श्वभूमी (Context)"
+  const bare = name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/\s*\([^)]*\)\s*$/, "")
+    .replace(/[\u200b-\u200d\ufeff]/g, "")
+    .trim();
+
+  if (
+    bare === "context" ||
+    bare === "संदर्भ" ||
+    bare === "पृष्ठभूमि" ||
+    bare === "पार्श्वभूमी" ||
+    bare === "ಹಿನ್ನೆಲೆ" ||
+    bare === "ಸಂದರ್ಭ" ||
+    bare === "నేపథ్యం" ||
+    bare === "నేపధ్యం" ||
+    bare === "కాంటెక్స్ట్"
+  ) {
+    return "Context";
+  }
+  if (
+    bare === "the debate" ||
+    bare === "debate" ||
+    bare === "बहस" ||
+    bare === "डिबेट" ||
+    bare === "चर्चा" ||
+    bare === "वाद" ||
+    bare === "ಚರ್ಚೆ" ||
+    bare === "చర్చ" ||
+    bare === "డిబేట్"
+  ) {
+    return "The debate";
+  }
+  if (
+    bare === "grounded points" ||
+    bare.includes("ग्राउंड") ||
+    bare.includes("जमीनी") ||
+    bare.includes("पुख्ता") ||
+    bare.includes("सत्यावर") ||
+    bare.includes("ಗ್ರೌಂಡ") ||
+    bare.includes("ಆಧಾರಿತ") ||
+    bare.includes("గ్రౌండ") ||
+    bare.includes("ఆధారాల")
+  ) {
+    return "Grounded points";
+  }
+  if (bare === "what we know") return "What we know";
+  if (
+    bare === "report" ||
+    bare === "रिपोर्ट" ||
+    bare === "अहवाल" ||
+    bare === "वृत्त" ||
+    bare === "ವರದಿ" ||
+    bare === "రిపోర్ట్" ||
+    bare === "నివేదిక"
+  ) {
+    return "Report";
+  }
+  return name.trim();
+}
+
 /** Bucket a story block's lines by their `### Section` headings. */
 function splitSections(block: string): Map<string, string> {
   const sections = new Map<string, string[]>();
@@ -269,7 +357,7 @@ function splitSections(block: string): Map<string, string> {
   for (const line of block.split("\n")) {
     const heading = line.match(SECTION_HEADING_RE);
     if (heading) {
-      current = heading[1].trim();
+      current = canonicalizeSection(heading[1]);
       if (!sections.has(current)) sections.set(current, []);
       continue;
     }
@@ -278,30 +366,50 @@ function splitSections(block: string): Map<string, string> {
 
   const out = new Map<string, string>();
   for (const [name, lines] of sections) {
+    // If both Report and What we know appear, keep both; parseStory prefers Report.
     out.set(name, lines.join("\n").trim());
   }
   return out;
 }
 
-const SOURCES_RE = /^\*\*Sources:\*\*\s+(.+)$/m;
+const SOURCES_RE =
+  /^\*\*(?:Sources|स्रोत|सोर्स|स्त्रोत|ಮೂಲಗಳು|మూలాలు|సోర్సెస్):\*\*\s+(.+)$/m;
 
 /**
- * Resolve a Markdown image path to a site-root public URL. Relative paths like
- * `images/2026-07-29/….jpg` are served from `public/images/` after sync.
+ * Resolve a Markdown image path to a site-root public URL.
+ *
+ * Nested multilingual files use `../../images/<date>/….jpg`; flat English files
+ * use `images/<date>/….jpg`. Both must become `/images/<date>/….jpg`.
  */
 export function resolveImageSrc(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return trimmed;
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) return trimmed;
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) {
+    return trimmed;
+  }
+
+  // Drop leading ./ ../ segments and a leading slash, then re-root.
+  const cleaned = trimmed
+    .replace(/^(?:\.\.\/|\.\/)+/, "")
+    .replace(/^\//, "");
+
+  if (cleaned.startsWith("images/")) return `/${cleaned}`;
   if (trimmed.startsWith("/")) return trimmed;
-  return `/${trimmed.replace(/^\.\//, "")}`;
+  return `/${cleaned}`;
 }
 
 const IMAGE_BLOCK_RE =
   /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)(?:\s*\n+[ \t]*<sub>\s*\*([\s\S]*?)\*\s*<\/sub>)?/g;
 
+/**
+ * Photo credit trails. English "Photo via …" plus Hindi/Marathi credit phrases
+ * and a few word-order variants the translator emits.
+ */
 const PHOTO_VIA_RE =
-  /(?:—|–|-)\s*Photo via\s+(?:\[([^\]]+)\]\(([^)]+)\)|([^.*]+))\s*$/i;
+  /(?:—|–|-)\s*(?:Photo via|फोटो साभार:?|फोटो सौजन्य:?|ಫೋಟೋ ಸೌಜನ್ಯ:?|ఫోటో సౌజన్యం:?)\s*(?:\[([^\]]+)\]\(([^)]+)\)|([^.*]+))\s*$/i;
+
+const PHOTO_VIA_ALT_RE =
+  /(?:—|–|-)\s*(?:फोटो\s*(?:\[([^\]]+)\]\(([^)]+)\)|([^.*]+))\s*के सौजन्य से|(?:\[([^\]]+)\]\(([^)]+)\)|([^.*]+))\s*के सौजन्य से फोटो|फोटो:\s*(?:\[([^\]]+)\]\(([^)]+)\)|([^.*]+))\s*के सौजन्य से)\s*$/i;
 
 /** Pull every photograph (and optional caption/credit) out of a story block. */
 export function parseStoryImages(block: string): StoryImage[] {
@@ -317,11 +425,17 @@ export function parseStoryImages(block: string): StoryImage[] {
 
     const rawCaption = (match[3] || "").trim();
     if (rawCaption) {
-      const via = rawCaption.match(PHOTO_VIA_RE);
+      const via = rawCaption.match(PHOTO_VIA_RE) || rawCaption.match(PHOTO_VIA_ALT_RE);
       if (via) {
-        credit = (via[1] || via[3] || "").trim() || undefined;
-        creditUrl = via[2]?.trim() || undefined;
-        caption = rawCaption.replace(PHOTO_VIA_RE, "").trim() || undefined;
+        credit =
+          (via[1] || via[3] || via[4] || via[6] || via[7] || via[9] || "").trim() ||
+          undefined;
+        creditUrl = (via[2] || via[5] || via[8] || "").trim() || undefined;
+        caption =
+          rawCaption
+            .replace(PHOTO_VIA_RE, "")
+            .replace(PHOTO_VIA_ALT_RE, "")
+            .trim() || undefined;
       } else {
         caption = rawCaption;
       }
@@ -350,7 +464,9 @@ export function stripImages(markdown: string): string {
  * discussion…*" signal note. Cut those off so only the prose body remains.
  */
 function stripTrailingMeta(text: string): string {
-  const idx = text.search(/^\*\*Sources:\*\*/m);
+  const idx = text.search(
+    /^\*\*(?:Sources|स्रोत|सोर्स|स्त्रोत|ಮೂಲಗಳು|మూలాలు|సోర్సెస్):\*\*/m,
+  );
   return (idx === -1 ? text : text.slice(0, idx)).trim();
 }
 
@@ -400,7 +516,9 @@ function parseStory(block: string): Story | null {
       ? parseDebate(stripImages(sections.get("The debate") ?? ""))
       : undefined;
   const claims = parseClaims(
-    mode === "debate" ? sections.get("Grounded points") : sections.get("What we know"),
+    mode === "debate"
+      ? sections.get("Grounded points")
+      : sections.get("What we know"),
   );
 
   // Newer report editions carry a full "### Report" narrative; older stub
@@ -431,8 +549,14 @@ function parseStory(block: string): Story | null {
  * Parse a full edition file.
  * @param markdown Raw file contents.
  * @param id The edition id === date "YYYY-MM-DD" (from the filename).
+ * @param lang Language code for this file (default `en`).
  */
-export function parseEdition(markdown: string, id: string): Edition {
+export function parseEdition(
+  markdown: string,
+  id: string,
+  lang: Lang = DEFAULT_LANG,
+  availableLangs: Lang[] = [DEFAULT_LANG],
+): Edition {
   const blocks = splitBlocks(markdown);
 
   const headerBlock = blocks[0] ?? "";
@@ -450,6 +574,119 @@ export function parseEdition(markdown: string, id: string): Edition {
     humanDate,
     storyCount: storyCount ?? stories.length,
     stories,
+    lang,
+    availableLangs,
+  };
+}
+
+function pickText(preferred: string | undefined, fallback: string | undefined): string | undefined {
+  const p = preferred?.trim();
+  if (p) return preferred;
+  const f = fallback?.trim();
+  if (f) return fallback;
+  return undefined;
+}
+
+function mergeImages(en: StoryImage[], tr: StoryImage[]): StoryImage[] {
+  if (en.length === 0) return tr;
+  if (tr.length === 0) return en;
+  const n = Math.max(en.length, tr.length);
+  const out: StoryImage[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = en[i];
+    const b = tr[i];
+    if (!a) {
+      out.push(b);
+      continue;
+    }
+    if (!b) {
+      out.push(a);
+      continue;
+    }
+    out.push({
+      // Prefer English/resolved src (same asset); keep translated caption/credit.
+      src: a.src || b.src,
+      alt: pickText(b.alt, a.alt) || a.alt,
+      caption: pickText(b.caption, a.caption),
+      credit: pickText(b.credit, a.credit),
+      creditUrl: b.creditUrl || a.creditUrl,
+    });
+  }
+  return out;
+}
+
+function mergeDebate(en?: Debate, tr?: Debate): Debate | undefined {
+  if (!tr && !en) return undefined;
+  if (!tr) return en;
+  if (!en) return tr;
+
+  const turns = en.turns.map((turn, i) => {
+    const t = tr.turns[i];
+    if (!t) return turn;
+    return {
+      speaker: pickText(t.speaker, turn.speaker) || turn.speaker,
+      body: pickText(t.body, turn.body) || turn.body,
+      side: turn.side,
+    };
+  });
+  // Append any extra translated turns the English parse missed.
+  for (let i = en.turns.length; i < tr.turns.length; i++) {
+    turns.push(tr.turns[i]);
+  }
+
+  const debate: Debate = { turns };
+  const bottom = pickText(tr.bottomLine, en.bottomLine);
+  if (bottom !== undefined) debate.bottomLine = bottom;
+  return debate;
+}
+
+function mergeStory(en: Story, tr: Story | undefined): Story {
+  if (!tr) return en;
+
+  const headline = pickText(tr.headline, en.headline) || en.headline;
+  const rawHeadline = pickText(tr.rawHeadline, en.rawHeadline) || en.rawHeadline;
+
+  const merged: Story = {
+    // Structural fields prefer English (mode, badges, source URLs, claim count).
+    index: en.index,
+    mode: en.mode,
+    badges: en.badges.sources > 0 || en.badges.claimsKept > 0 ? en.badges : tr.badges,
+    sources: en.sources.length > 0 ? en.sources : tr.sources,
+    claims: en.claims.length > 0 ? en.claims : tr.claims,
+    // Keep the English slug for stable static routes (Unicode path segments
+    // break Next's static export lookup). Display strings stay translated.
+    slug: en.slug,
+    headline,
+    rawHeadline,
+    dek: pickText(tr.dek, en.dek),
+    context: pickText(tr.context, en.context) || "",
+    images: mergeImages(en.images, tr.images),
+  };
+
+  const report = pickText(tr.report, en.report);
+  if (report !== undefined) merged.report = report;
+
+  const debate = mergeDebate(en.debate, tr.debate);
+  if (debate) merged.debate = debate;
+
+  return merged;
+}
+
+/**
+ * Merge a translated edition onto the English structural parse.
+ * Stories are joined by `## N.` index; missing translated fields fall back to English.
+ */
+export function mergeEditions(english: Edition, translated: Edition): Edition {
+  const byIndex = new Map(translated.stories.map((s) => [s.index, s]));
+  return {
+    ...english,
+    humanDate: pickText(translated.humanDate, english.humanDate) || english.humanDate,
+    storyCount: Math.max(english.storyCount, translated.storyCount),
+    stories: english.stories.map((s) => mergeStory(s, byIndex.get(s.index))),
+    lang: translated.lang,
+    availableLangs: translated.availableLangs.length
+      ? translated.availableLangs
+      : english.availableLangs,
   };
 }
 
@@ -457,4 +694,15 @@ export function parseEdition(markdown: string, id: string): Edition {
 export function editionIdFromFilename(filename: string): string | null {
   const match = filename.match(/^edition-(\d{4}-\d{2}-\d{2})\.md$/);
   return match ? match[1] : null;
+}
+
+/** `edition-YYYY-MM-DD.<lang>.md` → `{ date, lang }` or null. */
+export function langEditionFromFilename(
+  filename: string,
+): { date: string; lang: Lang } | null {
+  const match = filename.match(/^edition-(\d{4}-\d{2}-\d{2})\.([a-z]{2})\.md$/);
+  if (!match) return null;
+  const lang = match[2];
+  if (lang.length !== 2) return null;
+  return { date: match[1], lang: lang as Lang };
 }

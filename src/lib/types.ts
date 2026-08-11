@@ -1,9 +1,13 @@
 /**
  * Typed model for a GROUNDED edition, parsed from a single
- * `edition-YYYY-MM-DD.md` file. See `parser.ts` for the exact grammar.
+ * `edition-YYYY-MM-DD.md` file (or a nested multilingual sibling).
+ * See `parser.ts` for the exact grammar.
  */
 
+import type { Lang } from "./i18n";
+
 export type Mode = "debate" | "report";
+export type { Lang };
 
 export interface Claim {
   /** The verified claim text, rendered as-is (may be a terse wire headline). */
@@ -110,6 +114,10 @@ export interface Edition {
   /** Story count declared in the header dateline. */
   storyCount: number;
   stories: Story[];
+  /** Active language for this parsed view (`en` when only the flat file exists). */
+  lang: Lang;
+  /** Every language available for this date (always includes `en`). */
+  availableLangs: Lang[];
 }
 
 /** Lightweight edition metadata for archive/index listings. */
@@ -127,4 +135,6 @@ export interface EditionMeta {
   reportCount: number;
   /** Stories carrying a primary/official source (report mode or backed claim). */
   primaryCount: number;
+  /** Languages available for this date. */
+  availableLangs: Lang[];
 }
