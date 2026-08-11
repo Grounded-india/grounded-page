@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import {
+  Noto_Sans_Devanagari,
+  Noto_Sans_Kannada,
+  Noto_Sans_Telugu,
   Playfair_Display,
   Source_Serif_4,
   UnifrakturMaguntia,
@@ -39,6 +42,27 @@ const masthead = UnifrakturMaguntia({
   display: "swap",
 });
 
+const notoDeva = Noto_Sans_Devanagari({
+  subsets: ["devanagari"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-deva",
+  display: "swap",
+});
+
+const notoKannada = Noto_Sans_Kannada({
+  subsets: ["kannada"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-kannada",
+  display: "swap",
+});
+
+const notoTelugu = Noto_Sans_Telugu({
+  subsets: ["telugu"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-telugu",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
@@ -47,6 +71,10 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  icons: {
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    apple: [{ url: "/favicon.png" }],
+  },
   authors: [{ name: SITE_NAME, url: SITE_URL }],
   creator: SITE_NAME,
   publisher: SITE_NAME,
@@ -109,7 +137,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-IN"
-      className={`${display.variable} ${body.variable} ${masthead.variable}`}
+      className={`${display.variable} ${body.variable} ${masthead.variable} ${notoDeva.variable} ${notoKannada.variable} ${notoTelugu.variable}`}
     >
       <body className="font-body antialiased">
         <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />

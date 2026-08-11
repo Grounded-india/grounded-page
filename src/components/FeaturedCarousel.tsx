@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { RankedStory } from "@/lib/importance";
 import { cleanDek, storyLede } from "@/lib/content";
+import { DEFAULT_LANG, normalizeLang, storyPath } from "@/lib/i18n";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { Prose } from "./Prose";
@@ -26,9 +27,11 @@ const INTERVAL_MS = 14000;
 export function FeaturedCarousel({
   items,
   date,
+  lang = DEFAULT_LANG,
 }: {
   items: RankedStory[];
   date: string;
+  lang?: string;
 }) {
   const reduce = useReducedMotion();
   const count = items.length;
@@ -53,7 +56,7 @@ export function FeaturedCarousel({
 
   const active = items[Math.min(index, count - 1)];
   const story = active.story;
-  const href = `/story/${date}/${story.slug}`;
+  const href = storyPath(date, story.slug, normalizeLang(lang));
   const rotating = count > 1;
   const dek = cleanDek(story.dek, story.headline);
   const lede = storyLede(story);

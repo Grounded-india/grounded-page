@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Edition, Story } from "@/lib/types";
 import { cleanDek, hasContextBody, reconstructionNote, splitContext } from "@/lib/content";
+import { editionPath, storyPath } from "@/lib/i18n";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { SectionLabel } from "./SectionLabel";
@@ -37,6 +38,8 @@ export function StoryArticle({
   const dek = cleanDek(story.dek, story.headline);
   const { body } = splitContext(story.context);
   const [lead, ...gallery] = story.images;
+  const lang = edition.lang;
+  const editionHref = editionPath(edition.date, lang);
 
   return (
     <article className="mx-auto w-full max-w-[62rem] px-5 pb-10 pt-10 sm:px-8">
@@ -71,7 +74,7 @@ export function StoryArticle({
       <div className="mt-5 flex items-center gap-4">
         <hr className="rule-hair flex-1" />
         <Link
-          href={`/edition/${edition.date}`}
+          href={editionHref}
           className="kicker text-sepia hover:text-oxblood"
         >
           {edition.humanDate}
@@ -135,7 +138,7 @@ export function StoryArticle({
         <div className="sm:justify-self-start">
           {prev ? (
             <Link
-              href={`/story/${edition.date}/${prev.slug}`}
+              href={storyPath(edition.date, prev.slug, lang)}
               className="group block max-w-xs"
             >
               <span className="kicker text-sepia-light">← Previous</span>
@@ -149,7 +152,7 @@ export function StoryArticle({
         </div>
 
         <div className="text-center sm:justify-self-center">
-          <Link href={`/edition/${edition.date}`} className="nav-link">
+          <Link href={editionHref} className="nav-link">
             Back to the edition
           </Link>
         </div>
@@ -157,7 +160,7 @@ export function StoryArticle({
         <div className="sm:justify-self-end sm:text-right">
           {next ? (
             <Link
-              href={`/story/${edition.date}/${next.slug}`}
+              href={storyPath(edition.date, next.slug, lang)}
               className="group block max-w-xs sm:ml-auto"
             >
               <span className="kicker text-sepia-light">Next →</span>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Story } from "@/lib/types";
 import { teaserBlurb } from "@/lib/content";
+import { DEFAULT_LANG, normalizeLang, storyPath } from "@/lib/i18n";
 import { ModeStamp } from "./ModeStamp";
 import { ImpactMeter } from "./ImpactMeter";
 import { StoryFigure } from "./StoryFigure";
@@ -25,6 +26,7 @@ function sourceLine(story: Story): string {
 export function StoryTeaser({
   story,
   date,
+  lang = DEFAULT_LANG,
   score,
   ordinal,
   variant = "standard",
@@ -32,13 +34,14 @@ export function StoryTeaser({
 }: {
   story: Story;
   date: string;
+  lang?: string;
   score?: number;
   ordinal?: number;
   variant?: TeaserVariant;
   /** For `band` variant: put the photo on the right. */
   bandFlip?: boolean;
 }) {
-  const href = `/story/${date}/${story.slug}`;
+  const href = storyPath(date, story.slug, normalizeLang(lang));
   const blurb = teaserBlurb(story);
   const sources = sourceLine(story);
   const lead = story.images[0];

@@ -1098,6 +1098,55 @@
 html {
   scroll-behavior: smooth;
 }
+/* Language switcher — compact endonym chips in the masthead utility row. */
+.lang-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem 0.55rem;
+  max-width: min(28rem, 100%);
+}
+
+.lang-switcher-link {
+  font-family: theme("fontFamily.body");
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--sepia);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.lang-switcher-link:hover {
+  color: var(--oxblood);
+}
+
+.lang-switcher-link[data-active="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--oxblood);
+  font-weight: 600;
+}
+
+/* Prefer Indic webfonts when the document language is set. */
+html[data-lang="hi"] body,
+html[data-lang="mr"] body,
+html[lang^="hi"] body,
+html[lang^="mr"] body {
+  font-family: var(--font-noto-deva), theme("fontFamily.body");
+}
+
+html[data-lang="kn"] body,
+html[lang^="kn"] body {
+  font-family: var(--font-noto-kannada), theme("fontFamily.body");
+}
+
+html[data-lang="te"] body,
+html[lang^="te"] body {
+  font-family: var(--font-noto-telugu), theme("fontFamily.body");
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

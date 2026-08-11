@@ -4,27 +4,33 @@ import {
   getEdition,
   getEditionDates,
   getIssueNumber,
+  discoverLangs,
 } from "@/lib/editions";
-import { DEFAULT_LANG } from "@/lib/i18n";
+import { DEFAULT_LANG, isLang, LANG_META, type Lang } from "@/lib/i18n";
 import { SITE_NAME } from "@/lib/site";
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
 import { HtmlLang } from "@/components/HtmlLang";
 
-// In dev this lets a freshly-synced edition be viewed on-demand without a
-// restart; the production static export still pre-renders the full set below.
 export const dynamicParams = true;
 
 export function generateStaticParams() {
-  return getEditionDates().map((date) => ({ date }));
+  return getEditionDates().flatMap((date) =>
+    discoverLangs(date)
+      .filter((lang) => lang !== DEFAULT_LANG)
+      .map((lang) => ({ date, lang })),
+  );
 }
 
 export function generateMetadata({
   params,
 }: {
-  params: { date: string };
+  params: { date: string; lang: string };
 }): Metadata {
-  const edition = getEdition(params.date, DEFAULT_LANG);
+  if (!isLang(params.lang) || params.lang === DEFAULT_LANG) {
+    return { title: "Edition not found" };
+  }
+  const edition = getEdition(params.date, params.lang);
   if (!edition) return { title: "Edition not found" };
 
   const tops = edition.stories
@@ -32,10 +38,10 @@ export function generateMetadata({
     .map((s) => s.headline)
     .join(" · ");
   const description = `${SITE_NAME} edition for ${edition.humanDate} — ${edition.stories.length} fact-grounded, source-cited stories.${tops ? ` Lead: ${tops}.` : ""}`;
-  const path = `/edition/${edition.date}/`;
+  const path = `/edition/${edition.date}/${params.lang}/`;
 
   return {
-    title: edition.humanDate,
+    title: `${edition.humanDate} · ${LANG_META[params.lang as Lang].englishName}`,
     description,
     alternates: { canonical: path },
     openGraph: {
@@ -45,16 +51,19 @@ export function generateMetadata({
       url: path,
       publishedTime: `${edition.date}T00:00:00+05:30`,
       siteName: SITE_NAME,
+      locale: LANG_META[params.lang as Lang].htmlLang.replace("-", "_"),
     },
   };
 }
 
-export default function EditionPage({
+export default function TranslatedEditionPage({
   params,
 }: {
-  params: { date: string };
+  params: { date: string; lang: string };
 }) {
-  const edition = getEdition(params.date, DEFAULT_LANG);
+  if (!isLang(params.lang) || params.lang === DEFAULT_LANG) notFound();
+
+  const edition = getEdition(params.date, params.lang);
   if (!edition) notFound();
 
   return (

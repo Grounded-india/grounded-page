@@ -7,10 +7,12 @@
  * writes to `../GROUNDED/output/` into this app so the site can render them.
  *
  * Contract:
- *   - Backend writes files named exactly `edition-YYYY-MM-DD.md`.
+ *   - Backend writes flat English files named `edition-YYYY-MM-DD.md`.
+ *   - Backend writes multilingual bundles under
+ *     `output/editions/<date>/edition-<date>.<lang>.md` (always includes `.en.md`).
  *   - Backend writes photographs under `output/images/<date>/…`.
- *   - We copy `edition-*.md` into `content/editions/` and `images/` into
- *     `public/images/` (Next serves that folder as `/images/…`).
+ *   - We copy flat files → `content/editions/`, nested bundles →
+ *     `content/editions/<date>/`, and images → `public/images/`.
  *   - A new edition is just a new file dropped in → rebuild. No code changes.
  *
  * On Vercel / CI the sibling GROUNDED repo is absent. Always commit the editions
@@ -37,14 +39,15 @@ const SOURCE_DIR = process.env.SOURCE_DIR
 const DEST_DIR = path.resolve(repoRoot, "content", "editions");
 const IMAGES_SRC = path.join(SOURCE_DIR, "images");
 const IMAGES_DEST = path.resolve(repoRoot, "public", "images");
+const LANG_BUNDLE_SRC = path.join(SOURCE_DIR, "editions");
 const EDITION_RE = /^edition-\d{4}-\d{2}-\d{2}\.md$/;
+const LANG_EDITION_RE = /^edition-\d{4}-\d{2}-\d{2}\.[a-z]{2}\.md$/;
+const DATE_DIR_RE = /^\d{4}-\d{2}-\d{2}$/;
 const allowMissing = process.argv.includes("--allow-missing");
 
 async function syncImages() {
   if (!existsSync(IMAGES_SRC)) return 0;
   await mkdir(IMAGES_DEST, { recursive: true });
-  // Merge date folders; do not delete local-only images (e.g. committed assets
-  // for an edition the backend no longer holds).
   const dates = await readdir(IMAGES_SRC);
   let folders = 0;
   for (const name of dates) {
@@ -55,6 +58,36 @@ async function syncImages() {
     folders += 1;
   }
   return folders;
+}
+
+/** Copy `output/editions/<date>/*.md` → `content/editions/<date>/`. */
+async function syncLangBundles() {
+  if (!existsSync(LANG_BUNDLE_SRC)) return { folders: 0, files: 0 };
+  const dates = await readdir(LANG_BUNDLE_SRC);
+  let folders = 0;
+  let files = 0;
+  for (const name of dates) {
+    if (!DATE_DIR_RE.test(name)) continue;
+    const fromDir = path.join(LANG_BUNDLE_SRC, name);
+    if (!(await stat(fromDir)).isDirectory()) continue;
+    const toDir = path.join(DEST_DIR, name);
+    await mkdir(toDir, { recursive: true });
+    const entries = await readdir(fromDir);
+    let copiedHere = 0;
+    for (const file of entries) {
+      if (!LANG_EDITION_RE.test(file) && !EDITION_RE.test(file)) continue;
+      const from = path.join(fromDir, file);
+      const to = path.join(toDir, file);
+      if (!(await stat(from)).isFile()) continue;
+      await cp(from, to);
+      copiedHere += 1;
+    }
+    if (copiedHere > 0) {
+      folders += 1;
+      files += copiedHere;
+    }
+  }
+  return { folders, files };
 }
 
 async function main() {
@@ -73,7 +106,7 @@ async function main() {
   const entries = await readdir(SOURCE_DIR);
   const editions = entries.filter((name) => EDITION_RE.test(name)).sort();
 
-  if (editions.length === 0) {
+  if (editions.length === 0 && !existsSync(LANG_BUNDLE_SRC)) {
     const msg = `[sync:editions] No edition-YYYY-MM-DD.md files in ${SOURCE_DIR}`;
     if (allowMissing) {
       console.warn(`${msg} — using existing content/editions/.`);
@@ -93,10 +126,16 @@ async function main() {
     }
   }
 
+  const lang = await syncLangBundles();
   const imageFolders = await syncImages();
 
-  console.log(`[sync:editions] Copied ${copied} edition(s) → content/editions/`);
+  console.log(`[sync:editions] Copied ${copied} flat edition(s) → content/editions/`);
   for (const name of editions) console.log(`  · ${name}`);
+  if (lang.files > 0) {
+    console.log(
+      `[sync:editions] Synced ${lang.files} multilingual file(s) across ${lang.folders} date folder(s)`,
+    );
+  }
   if (imageFolders > 0) {
     console.log(`[sync:editions] Synced ${imageFolders} image folder(s) → public/images/`);
   }

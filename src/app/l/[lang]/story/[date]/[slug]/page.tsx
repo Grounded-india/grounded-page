@@ -1,38 +1,48 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
-  getAllEditions,
+  discoverLangs,
+  getEdition,
+  getEditionDates,
   getStory,
   getStoryByIndex,
 } from "@/lib/editions";
 import { cleanDek, storyLede } from "@/lib/content";
 import { scoreStory } from "@/lib/importance";
-import { DEFAULT_LANG, type Lang } from "@/lib/i18n";
+import { DEFAULT_LANG, isLang, type Lang } from "@/lib/i18n";
 import { SITE_NAME } from "@/lib/site";
 import { Masthead } from "@/components/Masthead";
 import { StoryArticle } from "@/components/StoryArticle";
 import { JsonLd, newsArticleJsonLd } from "@/components/JsonLd";
 import { HtmlLang } from "@/components/HtmlLang";
 
-// In dev this lets a freshly-synced edition's stories render on-demand without a
-// restart; the production static export still pre-renders the full set below.
 export const dynamicParams = true;
 
 export function generateStaticParams() {
-  return getAllEditions().flatMap((edition) =>
-    edition.stories.map((story) => ({
-      date: edition.date,
-      slug: story.slug,
-    })),
+  return getEditionDates().flatMap((date) =>
+    discoverLangs(date)
+      .filter((lang) => lang !== DEFAULT_LANG)
+      .flatMap((lang) => {
+        const edition = getEdition(date, lang);
+        if (!edition) return [];
+        return edition.stories.map((story) => ({
+          date,
+          lang,
+          slug: story.slug,
+        }));
+      }),
   );
 }
 
 export function generateMetadata({
   params,
 }: {
-  params: { date: string; slug: string };
+  params: { date: string; lang: string; slug: string };
 }): Metadata {
-  const found = getStory(params.date, params.slug, DEFAULT_LANG);
+  if (!isLang(params.lang) || params.lang === DEFAULT_LANG) {
+    return { title: "Story not found" };
+  }
+  const found = getStory(params.date, params.slug, params.lang);
   if (!found) return { title: "Story not found" };
 
   const { story, edition } = found;
@@ -41,7 +51,7 @@ export function generateMetadata({
     storyLede(story) ??
     `A ${story.mode} from ${SITE_NAME}, ${edition.humanDate}. Source-cited and auditable.`;
 
-  const path = `/story/${edition.date}/${story.slug}/`;
+  const path = `/l/${params.lang}/story/${edition.date}/${story.slug}/`;
 
   return {
     title: story.headline,
@@ -53,29 +63,19 @@ export function generateMetadata({
       description,
       url: path,
       publishedTime: `${edition.date}T00:00:00+05:30`,
-      modifiedTime: `${edition.date}T00:00:00+05:30`,
-      section: story.mode === "debate" ? "Debate" : "Report",
-      tags: [story.mode, "India", "fact-grounded", ...story.sources.slice(0, 4)],
       siteName: SITE_NAME,
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: story.headline,
-      description,
-    },
-    other: {
-      "article:published_time": `${edition.date}T00:00:00+05:30`,
-      "article:section": story.mode === "debate" ? "Debate" : "Report",
     },
   };
 }
 
-export default function StoryPage({
+export default function TranslatedStoryPage({
   params,
 }: {
-  params: { date: string; slug: string };
+  params: { date: string; lang: string; slug: string };
 }) {
-  const found = getStory(params.date, params.slug, DEFAULT_LANG);
+  if (!isLang(params.lang) || params.lang === DEFAULT_LANG) notFound();
+
+  const found = getStory(params.date, params.slug, params.lang);
   if (!found) notFound();
 
   const score = scoreStory(found.story, found.edition.stories.length);

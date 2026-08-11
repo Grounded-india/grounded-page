@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getIssueNumber, getLatestEdition } from "@/lib/editions";
 import { storyLede } from "@/lib/content";
+import { DEFAULT_LANG } from "@/lib/i18n";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
+import { HtmlLang } from "@/components/HtmlLang";
 
 export function generateMetadata(): Metadata {
   const edition = getLatestEdition();
@@ -59,7 +61,7 @@ export function generateMetadata(): Metadata {
 }
 
 export default function HomePage() {
-  const edition = getLatestEdition();
+  const edition = getLatestEdition(DEFAULT_LANG);
 
   if (!edition) {
     return (
@@ -78,11 +80,15 @@ export default function HomePage() {
 
   return (
     <>
+      <HtmlLang lang={edition.lang} />
       <Masthead
         variant="full"
         humanDate={edition.humanDate}
         issueNumber={getIssueNumber(edition.id)}
         active="front"
+        date={edition.date}
+        lang={edition.lang}
+        availableLangs={edition.availableLangs}
       />
       <FrontPage edition={edition} />
       <div className="mx-auto w-full max-w-broadsheet px-5 pb-4 text-center sm:px-8">

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { Lang } from "@/lib/i18n";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 type NavKey = "front" | "archive" | "about" | null;
 
@@ -50,6 +52,12 @@ interface MastheadProps {
   humanDate?: string;
   issueNumber?: number;
   active?: NavKey;
+  /** Edition date for language switching (omit on archive/about). */
+  date?: string;
+  lang?: Lang;
+  availableLangs?: Lang[];
+  storyIndex?: number;
+  storySlugsByLang?: Partial<Record<Lang, string>>;
 }
 
 /**
@@ -61,18 +69,34 @@ export function Masthead({
   humanDate,
   issueNumber,
   active = null,
+  date,
+  lang,
+  availableLangs,
+  storyIndex,
+  storySlugsByLang,
 }: MastheadProps) {
   const isFull = variant === "full";
+  const switcher =
+    date && lang && availableLangs && availableLangs.length > 1 ? (
+      <LanguageSwitcher
+        date={date}
+        lang={lang}
+        availableLangs={availableLangs}
+        storyIndex={storyIndex}
+        storySlugsByLang={storySlugsByLang}
+      />
+    ) : null;
 
   return (
     <header className="mx-auto w-full max-w-broadsheet px-5 pt-6 sm:px-8">
       <hr className="rule-hair" />
 
       {isFull && (
-        <div className="flex items-center justify-between py-2 text-sepia">
+        <div className="flex items-center justify-between gap-3 py-2 text-sepia">
           <span className="kicker !text-[0.6rem]">
             Vol. I{issueNumber ? ` · No. ${issueNumber}` : ""}
           </span>
+          {switcher}
           <span className="kicker !text-[0.6rem]">Est. MMXXVI</span>
         </div>
       )}
@@ -129,7 +153,11 @@ export function Masthead({
         </>
       ) : (
         <>
-          <MastheadNav active={active} />
+          <div className="flex items-center justify-between gap-3 py-1">
+            <div className="flex-1" />
+            <MastheadNav active={active} />
+            <div className="flex flex-1 justify-end">{switcher}</div>
+          </div>
           <hr className="rule-hair" />
           <ReaderNotice />
         </>

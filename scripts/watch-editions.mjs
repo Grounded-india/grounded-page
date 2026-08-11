@@ -35,7 +35,10 @@ const SOURCE_DIR = process.env.SOURCE_DIR
 const DEST_DIR = path.resolve(repoRoot, "content", "editions");
 const IMAGES_SRC = path.join(SOURCE_DIR, "images");
 const IMAGES_DEST = path.resolve(repoRoot, "public", "images");
+const LANG_BUNDLE_SRC = path.join(SOURCE_DIR, "editions");
 const EDITION_RE = /^edition-\d{4}-\d{2}-\d{2}\.md$/;
+const LANG_EDITION_RE = /^edition-\d{4}-\d{2}-\d{2}\.[a-z]{2}\.md$/;
+const DATE_DIR_RE = /^\d{4}-\d{2}-\d{2}$/;
 const shouldBuild = process.argv.includes("--build");
 
 // Poll interval as a safety net in case fs.watch drops an event on this OS.
@@ -56,6 +59,33 @@ async function syncImages() {
     if (!(await stat(from)).isDirectory()) continue;
     await cp(from, to, { recursive: true });
     any = true;
+  }
+  return any;
+}
+
+
+async function syncLangBundles() {
+  if (!existsSync(LANG_BUNDLE_SRC)) return false;
+  const dates = await readdir(LANG_BUNDLE_SRC);
+  let any = false;
+  for (const name of dates) {
+    if (!DATE_DIR_RE.test(name)) continue;
+    const fromDir = path.join(LANG_BUNDLE_SRC, name);
+    if (!(await stat(fromDir)).isDirectory()) continue;
+    const toDir = path.join(DEST_DIR, name);
+    await mkdir(toDir, { recursive: true });
+    for (const file of await readdir(fromDir)) {
+      if (!LANG_EDITION_RE.test(file) && !EDITION_RE.test(file)) continue;
+      const from = path.join(fromDir, file);
+      const to = path.join(toDir, file);
+      if (!(await stat(from)).isFile()) continue;
+      const src = await stat(from);
+      const dst = await stat(to).catch(() => null);
+      if (!dst || dst.size !== src.size || dst.mtimeMs < src.mtimeMs) {
+        await cp(from, to);
+        any = true;
+      }
+    }
   }
   return any;
 }
@@ -85,6 +115,10 @@ async function syncOnce() {
 
   // Always refresh photographs alongside Markdown — cheap, and keeps captions
   // that land mid-write from pointing at a missing file.
+  if (await syncLangBundles()) {
+    if (!changed.includes("editions/")) changed.push("editions/");
+  }
+
   if (await syncImages()) {
     if (!changed.includes("images/")) changed.push("images/");
   }
@@ -165,6 +199,11 @@ async function main() {
     });
     if (existsSync(IMAGES_SRC)) {
       watch(IMAGES_SRC, { persistent: true, recursive: true }, () => {
+        scheduleSync();
+      });
+    }
+    if (existsSync(LANG_BUNDLE_SRC)) {
+      watch(LANG_BUNDLE_SRC, { persistent: true, recursive: true }, () => {
         scheduleSync();
       });
     }
