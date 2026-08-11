@@ -58,6 +58,7 @@ interface MastheadProps {
   availableLangs?: Lang[];
   storyIndex?: number;
   storySlugsByLang?: Partial<Record<Lang, string>>;
+  hrefByLang?: Partial<Record<Lang, string>>;
 }
 
 /**
@@ -74,6 +75,7 @@ export function Masthead({
   availableLangs,
   storyIndex,
   storySlugsByLang,
+  hrefByLang,
 }: MastheadProps) {
   const isFull = variant === "full";
   const switcher =
@@ -84,6 +86,7 @@ export function Masthead({
         availableLangs={availableLangs}
         storyIndex={storyIndex}
         storySlugsByLang={storySlugsByLang}
+        hrefByLang={hrefByLang}
       />
     ) : null;
 

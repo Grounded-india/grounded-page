@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getIssueNumber, getLatestEdition } from "@/lib/editions";
+import { getIssueNumber, getLatestEdition, langSwitcherFor } from "@/lib/editions";
 import { storyLede } from "@/lib/content";
 import { DEFAULT_LANG } from "@/lib/i18n";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
@@ -78,6 +78,10 @@ export default function HomePage() {
     );
   }
 
+  const switcher = langSwitcherFor(edition.date, edition.lang, {
+    homeEnglish: true,
+  });
+
   return (
     <>
       <HtmlLang lang={edition.lang} />
@@ -88,7 +92,8 @@ export default function HomePage() {
         active="front"
         date={edition.date}
         lang={edition.lang}
-        availableLangs={edition.availableLangs}
+        availableLangs={switcher.availableLangs}
+        hrefByLang={switcher.hrefByLang}
       />
       <FrontPage edition={edition} />
       <div className="mx-auto w-full max-w-broadsheet px-5 pb-4 text-center sm:px-8">

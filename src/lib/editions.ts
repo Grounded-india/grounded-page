@@ -19,6 +19,7 @@ import {
 import { rankStories } from "./importance";
 import {
   DEFAULT_LANG,
+  editionPath,
   isLang,
   normalizeLang,
   type Lang,
@@ -66,6 +67,59 @@ export function discoverLangs(date: string): Lang[] {
   if (langs.size > 0) langs.add(DEFAULT_LANG);
 
   return SUPPORTED_LANGS.filter((l) => langs.has(l));
+}
+
+/** Union of every language that exists for any edition on the site. */
+export function discoverSiteLangs(): Lang[] {
+  const langs = new Set<Lang>([DEFAULT_LANG]);
+  for (const date of listDateIds()) {
+    for (const lang of discoverLangs(date)) langs.add(lang);
+  }
+  return SUPPORTED_LANGS.filter((l) => langs.has(l));
+}
+
+/** Newest edition date that has a file for `lang` (English always prefers the latest flat file). */
+export function latestDateForLang(lang: Lang): string | undefined {
+  for (const date of listDateIds()) {
+    if (discoverLangs(date).includes(lang)) return date;
+  }
+  return undefined;
+}
+
+/**
+ * Language-switcher props for a page. When the current date is English-only
+ * (typical for the live frontpage), still expose every site language and point
+ * each chip at the newest edition that carries that translation.
+ */
+export function langSwitcherFor(
+  date: string,
+  lang: Lang,
+  opts: { homeEnglish?: boolean } = {},
+): {
+  availableLangs: Lang[];
+  hrefByLang: Partial<Record<Lang, string>>;
+} {
+  const dateLangs = discoverLangs(date);
+  const siteLangs = discoverSiteLangs();
+  const availableLangs = siteLangs.length > 1 ? siteLangs : dateLangs;
+  const latestEn = listDateIds()[0];
+
+  const hrefByLang: Partial<Record<Lang, string>> = {};
+  for (const code of availableLangs) {
+    if (code === DEFAULT_LANG) {
+      hrefByLang[code] =
+        opts.homeEnglish || date === latestEn ? "/" : editionPath(date, DEFAULT_LANG);
+      continue;
+    }
+    if (dateLangs.includes(code)) {
+      hrefByLang[code] = editionPath(date, code);
+      continue;
+    }
+    const fallbackDate = latestDateForLang(code);
+    if (fallbackDate) hrefByLang[code] = editionPath(fallbackDate, code);
+  }
+
+  return { availableLangs, hrefByLang };
 }
 
 function englishSourcePath(date: string): string | null {

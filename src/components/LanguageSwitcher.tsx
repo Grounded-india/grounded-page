@@ -19,6 +19,11 @@ interface LanguageSwitcherProps {
   storyIndex?: number;
   /** Slug map for each available language (index → slug), for story pages. */
   storySlugsByLang?: Partial<Record<Lang, string>>;
+  /**
+   * Optional explicit targets per language (used on the live English frontpage
+   * so chips can jump to the newest translated edition when today has no pack).
+   */
+  hrefByLang?: Partial<Record<Lang, string>>;
   className?: string;
 }
 
@@ -32,6 +37,7 @@ export function LanguageSwitcher({
   availableLangs,
   storyIndex,
   storySlugsByLang,
+  hrefByLang,
   className = "",
 }: LanguageSwitcherProps) {
   const router = useRouter();
@@ -51,6 +57,7 @@ export function LanguageSwitcher({
   if (langs.length <= 1) return null;
 
   function hrefFor(next: Lang): string {
+    if (hrefByLang?.[next]) return hrefByLang[next]!;
     if (storyIndex !== undefined && storySlugsByLang) {
       const slug = storySlugsByLang[next];
       if (slug) return storyPath(date, slug, next);

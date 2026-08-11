@@ -1,7 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { discoverLangs, getEdition, loadEdition } from "./editions";
+import {
+  discoverLangs,
+  discoverSiteLangs,
+  getEdition,
+  langSwitcherFor,
+  latestDateForLang,
+  loadEdition,
+} from "./editions";
 import { parseEdition, mergeEditions, resolveImageSrc } from "./parser";
 
 const DATE = "2026-08-03";
@@ -100,6 +107,21 @@ describe("multilingual editions — 2026-08-03", () => {
     expect(edition?.stories[0].images.every((i) => resolveImageSrc(i.src) === i.src)).toBe(
       true,
     );
+  });
+
+  it("site-wide switcher appears even on English-only latest editions", () => {
+    if (!fs.existsSync(HI)) return;
+    const site = discoverSiteLangs();
+    expect(site).toEqual(expect.arrayContaining(["en", "hi", "kn", "mr", "te"]));
+    expect(latestDateForLang("hi")).toBe(DATE);
+
+    const latest = getEdition(getEdition("2026-08-11", "en") ? "2026-08-11" : DATE, "en");
+    // Prefer the live English frontpage date when present.
+    const date = latest?.date ?? DATE;
+    const switcher = langSwitcherFor(date, "en", { homeEnglish: true });
+    expect(switcher.availableLangs.length).toBeGreaterThan(1);
+    expect(switcher.hrefByLang.en).toBe("/");
+    expect(switcher.hrefByLang.hi).toBe(`/edition/${DATE}/hi/`);
   });
 });
 

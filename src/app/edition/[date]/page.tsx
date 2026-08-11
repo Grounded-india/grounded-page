@@ -4,6 +4,7 @@ import {
   getEdition,
   getEditionDates,
   getIssueNumber,
+  langSwitcherFor,
 } from "@/lib/editions";
 import { DEFAULT_LANG } from "@/lib/i18n";
 import { SITE_NAME } from "@/lib/site";
@@ -57,6 +58,8 @@ export default function EditionPage({
   const edition = getEdition(params.date, DEFAULT_LANG);
   if (!edition) notFound();
 
+  const switcher = langSwitcherFor(edition.date, edition.lang);
+
   return (
     <>
       <HtmlLang lang={edition.lang} />
@@ -67,7 +70,8 @@ export default function EditionPage({
         active={null}
         date={edition.date}
         lang={edition.lang}
-        availableLangs={edition.availableLangs}
+        availableLangs={switcher.availableLangs}
+        hrefByLang={switcher.hrefByLang}
       />
       <FrontPage edition={edition} />
     </>
