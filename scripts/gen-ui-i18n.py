@@ -14,7 +14,7 @@ en = {
     "nav.method": "Method",
     "nav.sections": "Sections",
     "nav.footer": "Footer",
-    "masthead.est": "Est. MMXXVI",
+    "masthead.est": "Est. 2026",
     "masthead.factline": "Fact-grounded · Auditable",
     "masthead.motto": "Someone has to keep you grounded.",
     "masthead.brandAria": "The Grounded Times — front page",
