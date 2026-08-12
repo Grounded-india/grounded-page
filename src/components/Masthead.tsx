@@ -103,10 +103,11 @@ export function Masthead({
       <hr className="rule-hair" />
 
       {isFull && (
-        <div className="flex items-center justify-between gap-3 py-2 text-sepia">
+        <div className="masthead-utility">
           <span className="kicker !text-[0.6rem]">
             Vol. I{issueNumber ? ` · No. ${issueNumber}` : ""}
           </span>
+          {switcher ?? <span />}
           <span className="kicker !text-[0.6rem]">{t(lang, "masthead.est")}</span>
         </div>
       )}
@@ -156,12 +157,6 @@ export function Masthead({
               {t(lang, "masthead.motto")}
             </p>
           </div>
-          {switcher && (
-            <>
-              <hr className="rule-hair mt-3" />
-              <div className="lang-switcher-bar">{switcher}</div>
-            </>
-          )}
           <hr className="rule-hair mt-3" />
           <MastheadNav active={active} lang={lang} />
           <hr className="rule-thick" />
@@ -169,9 +164,10 @@ export function Masthead({
         </>
       ) : (
         <>
-          {switcher && <div className="lang-switcher-bar">{switcher}</div>}
-          <div className="flex items-center justify-center gap-3 py-1">
+          <div className="flex items-center justify-between gap-3 py-1">
+            <div className="flex-1" />
             <MastheadNav active={active} lang={lang} />
+            <div className="flex flex-1 justify-end">{switcher}</div>
           </div>
           <hr className="rule-hair" />
           <ReaderNotice lang={lang} />
