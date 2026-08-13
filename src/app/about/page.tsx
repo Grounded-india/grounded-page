@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
+import { existsSync } from "fs";
+import path from "path";
 import { Masthead } from "@/components/Masthead";
 import { SectionLabel } from "@/components/SectionLabel";
 import { ModeStamp } from "@/components/ModeStamp";
@@ -18,38 +21,88 @@ export const metadata: Metadata = {
   },
 };
 
-const PIPELINE: { n: string; title: string }[] = [
-  { n: "I", title: "Ingestion" },
-  { n: "II", title: "Clustering" },
-  { n: "III", title: "Ranking" },
-  { n: "IV", title: "Extraction" },
-  { n: "V", title: "Verification" },
-  { n: "VI", title: "Audit" },
+const PIPELINE: { n: string; title: string; blurb: string }[] = [
+  {
+    n: "I",
+    title: "Ingestion",
+    blurb: "Official records, wires, and the day's radar arrive as raw material.",
+  },
+  {
+    n: "II",
+    title: "Clustering",
+    blurb: "Scattered items that describe the same event are gathered into one story.",
+  },
+  {
+    n: "III",
+    title: "Ranking",
+    blurb: "Importance is scored by substance and source standing — not virality.",
+  },
+  {
+    n: "IV",
+    title: "Extraction",
+    blurb: "Claims are pulled out of the source text, one discrete fact at a time.",
+  },
+  {
+    n: "V",
+    title: "Verification",
+    blurb: "Each claim is checked back against the citation that supposedly supports it.",
+  },
+  {
+    n: "VI",
+    title: "Audit",
+    blurb: "A final pass hunts for hallucination before anything reaches the page.",
+  },
 ];
 
+function methodImage(filename: string): string | null {
+  const rel = path.join("public", "images", "method", filename);
+  return existsSync(path.join(process.cwd(), rel))
+    ? `/images/method/${filename}`
+    : null;
+}
+
 export default function AboutPage() {
+  const pressImg = methodImage("press.jpg") ?? methodImage("press.webp") ?? methodImage("press.png");
+  const recordImg =
+    methodImage("record.jpg") ??
+    methodImage("record.webp") ??
+    methodImage("record.png");
+
   return (
     <>
       <Masthead variant="slim" active="about" />
 
-      <div className="mx-auto w-full max-w-[46rem] px-5 pb-8 pt-10 sm:px-8">
-        <div className="text-center">
-          <span className="kicker text-sepia">A note on method</span>
-          <h1
-            className="mt-2 font-display font-black leading-[1.02] text-ink"
-            style={{ fontSize: "clamp(2.3rem, 6.5vw, 3.8rem)" }}
-          >
-            Credibility, through transparency
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl font-display text-xl italic leading-snug text-sepia">
+      <article className="method-page">
+        {/* Opening */}
+        <header className="method-hero">
+          <span className="kicker text-oxblood">A note on method</span>
+          <h1 className="method-title">Credibility, through transparency</h1>
+          <p className="method-standfirst">
             GROUNDED is written and edited by machine. That is precisely why it
             shows its work.
           </p>
-        </div>
+        </header>
 
-        <hr className="rule-double mt-8" />
+        {pressImg && (
+          <figure className="method-bleed">
+            <Image
+              src={pressImg}
+              alt="A letterpress or newspaper printing floor — ink, metal, and paper."
+              width={1600}
+              height={900}
+              className="method-bleed-img"
+              priority
+            />
+            <figcaption className="method-caption">
+              The press shows its work. So do we.
+            </figcaption>
+          </figure>
+        )}
 
-        <section className="prose-paper mt-8 drop-cap">
+        <hr className="rule-double method-rule" />
+
+        {/* Promise */}
+        <section className="method-measure prose-paper drop-cap method-enter">
           <p>
             A newspaper earns trust slowly and can lose it in a single careless
             line. An autonomous one cannot lean on a masthead of famous by-lines
@@ -65,26 +118,45 @@ export default function AboutPage() {
           </p>
         </section>
 
-        <section className="mt-12">
-          <SectionLabel>Two tiers of source</SectionLabel>
-          <div className="prose-paper">
-            <p>
+        <blockquote className="method-pull">
+          <p>You can always check.</p>
+        </blockquote>
+
+        {/* Source tiers */}
+        <section className="method-section method-enter" style={{ animationDelay: "80ms" }}>
+          <div className="method-section-head">
+            <SectionLabel>Two tiers of source</SectionLabel>
+            <p className="method-lede">
               We hold sources to two distinct offices, and never let them trade
               places.
             </p>
           </div>
-          <div className="mt-4 grid gap-6 sm:grid-cols-2">
-            <div className="border-t-2 border-ink/70 pt-3">
+
+          <div className="method-tiers">
+            <div className="method-tier" data-tier="ground">
+              {recordImg && (
+                <div className="method-tier-photo">
+                  <Image
+                    src={recordImg}
+                    alt="Official records and documents that can establish a fact."
+                    width={800}
+                    height={520}
+                    className="method-tier-img"
+                  />
+                </div>
+              )}
               <div className="kicker text-ink">Ground truth</div>
-              <p className="mt-2 font-body leading-relaxed text-ink">
-                Primary and official records and the established wire services —
+              <h2 className="method-tier-title">The record</h2>
+              <p>
+                Primary and official sources and the established wire services —
                 the courts, the Reserve Bank, ministries, the agencies. These may
                 establish a fact. A claim they confirm carries the seal.
               </p>
             </div>
-            <div className="border-t-2 border-ink/30 pt-3">
+            <div className="method-tier" data-tier="radar">
               <div className="kicker text-sepia">Radar only</div>
-              <p className="mt-2 font-body leading-relaxed text-sepia">
+              <h2 className="method-tier-title">The compass</h2>
+              <p>
                 Social posts and aggregators tell us where to point our
                 attention. They may raise a subject; they may never, on their
                 own, settle a fact. They are a compass, not a witness.
@@ -93,90 +165,96 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className="mt-12">
-          <SectionLabel>Report, or Debate</SectionLabel>
-          <div className="prose-paper">
-            <p>
+        {/* Report / Debate */}
+        <section className="method-section method-enter" style={{ animationDelay: "120ms" }}>
+          <div className="method-section-head">
+            <SectionLabel>Report, or Debate</SectionLabel>
+            <p className="method-lede">
               Every story is stamped with the ground it stands on. There is no
               third, quieter category for the doubtful.
             </p>
           </div>
 
-          <div className="mt-5 space-y-5">
-            <div className="flex items-start gap-4 border-t border-ink/15 pt-4">
-              <ModeStamp mode="report" className="mt-1 shrink-0" />
-              <p className="font-body leading-relaxed text-ink">
-                <strong>A Report</strong> rests on at least one primary or
-                official source. Its verified claims may carry the gold seal of a
-                primary-source backing. This is the paper speaking with the record
-                behind it.
+          <div className="method-modes">
+            <div className="method-mode">
+              <ModeStamp mode="report" />
+              <h2 className="method-mode-title">Report</h2>
+              <p>
+                Rests on at least one primary or official source. Verified
+                claims may carry the gold seal. This is the paper speaking with
+                the record behind it.
               </p>
             </div>
-            <div className="flex items-start gap-4 border-t border-ink/15 pt-4">
-              <ModeStamp mode="debate" className="mt-1 shrink-0" />
-              <p className="font-body leading-relaxed text-ink">
-                <strong>A Debate</strong> is a story that matters but which no
-                primary or official source has yet confirmed. Rather than bury it
-                or dress it up as settled, we set the accounts side by side and
-                let the reader see exactly what is — and is not — established.
+            <div className="method-mode-rule" aria-hidden="true" />
+            <div className="method-mode">
+              <ModeStamp mode="debate" />
+              <h2 className="method-mode-title">Debate</h2>
+              <p>
+                A story that matters, but which no primary source has yet
+                confirmed. Rather than bury it or dress it up as settled, we set
+                the accounts side by side.
               </p>
             </div>
           </div>
         </section>
 
-        <section className="mt-12">
-          <SectionLabel>The six layers</SectionLabel>
-          <div className="prose-paper mb-6">
-            <p>
+        {/* Pipeline */}
+        <section className="method-section method-enter" style={{ animationDelay: "160ms" }}>
+          <div className="method-section-head">
+            <SectionLabel>The six layers</SectionLabel>
+            <p className="method-lede">
               From raw record to printed page, every edition passes through six
               stages. Each is designed to be inspected.
             </p>
           </div>
-          <ol className="space-y-0">
-            {PIPELINE.map((layer) => (
+
+          <ol className="method-pipeline">
+            {PIPELINE.map((layer, i) => (
               <li
                 key={layer.n}
-                className="flex items-baseline gap-5 border-t border-ink/15 py-4 first:border-t-0"
+                className="method-layer"
+                style={{ animationDelay: `${200 + i * 40}ms` }}
               >
-                <span className="w-8 shrink-0 font-display text-2xl font-bold leading-none text-oxblood">
+                <span className="method-layer-n" aria-hidden="true">
                   {layer.n}
                 </span>
-                <h3 className="font-display text-xl font-bold text-ink">
-                  {layer.title}
-                </h3>
+                <div>
+                  <h3 className="method-layer-title">{layer.title}</h3>
+                  <p className="method-layer-blurb">{layer.blurb}</p>
+                </div>
               </li>
             ))}
           </ol>
         </section>
 
-        <section className="mt-12">
-          <SectionLabel>Every claim, a citation</SectionLabel>
-          <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-            <PrimarySeal size={92} className="shrink-0" />
-            <div className="prose-paper">
-              <p>
-                The seal you will find beside certain claims is not decoration.
-                It marks a statement a primary or official source has confirmed.
-                Where it is absent, the claim still stands on named reporting —
-                you are simply told to weigh it as such. Nothing is left to the
-                reader's faith that we got it right.
-              </p>
-            </div>
+        {/* Seal */}
+        <section className="method-seal-band method-enter" style={{ animationDelay: "220ms" }}>
+          <PrimarySeal size={110} className="method-seal-mark" />
+          <div>
+            <SectionLabel>Every claim, a citation</SectionLabel>
+            <p className="method-seal-copy">
+              The seal beside certain claims is not decoration. It marks a
+              statement a primary or official source has confirmed. Where it is
+              absent, the claim still stands on named reporting — you are simply
+              told to weigh it as such. Nothing is left to faith that we got it
+              right.
+            </p>
           </div>
         </section>
 
-        <hr className="rule-thick mt-12" />
-        <p className="mt-6 text-center font-body italic leading-relaxed text-sepia">
-          Every claim we print is extracted from source material, verified
-          against its citations, and audited for hallucination. That is the whole
-          of the method, and the whole of the promise.
-        </p>
-        <div className="mt-6 text-center">
+        <hr className="rule-thick method-rule" />
+
+        <footer className="method-close">
+          <p>
+            Every claim we print is extracted from source material, verified
+            against its citations, and audited for hallucination. That is the
+            whole of the method, and the whole of the promise.
+          </p>
           <Link href="/" className="nav-link">
             ← Return to the front page
           </Link>
-        </div>
-      </div>
+        </footer>
+      </article>
     </>
   );
 }

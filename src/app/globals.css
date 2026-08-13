@@ -1182,6 +1182,348 @@ html {
   }
 }
 
+/* --- Method / about page --------------------------------------------- */
+.method-page {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 52rem;
+  padding: 2.5rem 1.25rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .method-page {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.method-hero {
+  text-align: center;
+  max-width: 38rem;
+  margin: 0 auto;
+}
+
+.method-title {
+  margin-top: 0.55rem;
+  font-family: theme("fontFamily.display");
+  font-weight: 900;
+  line-height: 1.02;
+  color: var(--ink);
+  font-size: clamp(2.4rem, 7vw, 4rem);
+  letter-spacing: -0.01em;
+}
+
+.method-standfirst {
+  margin: 1rem auto 0;
+  max-width: 30rem;
+  font-family: theme("fontFamily.display");
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+  font-style: italic;
+  line-height: 1.35;
+  color: var(--sepia);
+}
+
+.method-bleed {
+  margin: 2rem -0.25rem 0;
+}
+
+@media (min-width: 720px) {
+  .method-bleed {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+  }
+}
+
+.method-bleed-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  filter: sepia(0.18) contrast(1.05);
+}
+
+.method-caption {
+  margin-top: 0.45rem;
+  font-family: theme("fontFamily.body");
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sepia);
+  text-align: center;
+}
+
+.method-rule {
+  margin-top: 2rem;
+}
+
+.method-measure {
+  margin-top: 2rem;
+  max-width: 40rem;
+}
+
+.method-pull {
+  margin: 2.75rem auto;
+  max-width: 28rem;
+  padding: 1.25rem 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  text-align: center;
+}
+
+.method-pull p {
+  margin: 0;
+  font-family: theme("fontFamily.display");
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-weight: 800;
+  font-style: italic;
+  line-height: 1.15;
+  color: var(--oxblood);
+}
+
+.method-section {
+  margin-top: 3.25rem;
+}
+
+.method-section-head {
+  margin-bottom: 1.35rem;
+  max-width: 36rem;
+}
+
+.method-lede {
+  margin: 0.65rem 0 0;
+  font-family: theme("fontFamily.display");
+  font-size: 1.12rem;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--sepia);
+}
+
+.method-tiers {
+  display: grid;
+  gap: 1.75rem;
+}
+
+@media (min-width: 700px) {
+  .method-tiers {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 2.25rem;
+    align-items: start;
+  }
+}
+
+.method-tier {
+  padding-top: 0.85rem;
+  border-top: 2px solid color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.method-tier[data-tier="radar"] {
+  border-top-color: color-mix(in srgb, var(--ink) 22%, transparent);
+}
+
+.method-tier-photo {
+  margin: 0 0 0.9rem;
+  overflow: hidden;
+}
+
+.method-tier-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 5 / 3;
+  object-fit: cover;
+  filter: sepia(0.12) contrast(1.04);
+}
+
+.method-tier-title {
+  margin: 0.35rem 0 0.55rem;
+  font-family: theme("fontFamily.display");
+  font-size: 1.55rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.method-tier p {
+  margin: 0;
+  font-family: theme("fontFamily.body");
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.method-tier[data-tier="radar"] p,
+.method-tier[data-tier="radar"] .method-tier-title {
+  color: var(--sepia);
+}
+
+.method-modes {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 700px) {
+  .method-modes {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1.75rem;
+    align-items: start;
+  }
+}
+
+.method-mode-rule {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .method-mode-rule {
+    display: block;
+    width: 1px;
+    align-self: stretch;
+    background: color-mix(in srgb, var(--ink) 18%, transparent);
+    min-height: 8rem;
+  }
+}
+
+.method-mode {
+  padding-top: 1rem;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent);
+}
+
+@media (min-width: 700px) {
+  .method-mode {
+    border-top: 0;
+    padding-top: 0;
+  }
+}
+
+.method-mode-title {
+  margin: 0.75rem 0 0.45rem;
+  font-family: theme("fontFamily.display");
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.method-mode p {
+  margin: 0;
+  font-family: theme("fontFamily.body");
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.method-pipeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+
+@media (min-width: 720px) {
+  .method-pipeline {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2.5rem;
+  }
+}
+
+.method-layer {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+}
+
+.method-layer-n {
+  font-family: theme("fontFamily.display");
+  font-size: 1.85rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--oxblood);
+  padding-top: 0.1rem;
+}
+
+.method-layer-title {
+  margin: 0;
+  font-family: theme("fontFamily.display");
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.method-layer-blurb {
+  margin: 0.3rem 0 0;
+  font-family: theme("fontFamily.body");
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--sepia);
+}
+
+.method-seal-band {
+  margin-top: 3.25rem;
+  display: grid;
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1.75rem 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+@media (min-width: 640px) {
+  .method-seal-band {
+    grid-template-columns: auto 1fr;
+    gap: 1.75rem;
+  }
+}
+
+.method-seal-mark {
+  justify-self: center;
+}
+
+.method-seal-copy {
+  margin: 0.7rem 0 0;
+  max-width: 34rem;
+  font-family: theme("fontFamily.body");
+  font-size: 1.02rem;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.method-close {
+  margin-top: 1.75rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.method-close p {
+  margin: 0;
+  max-width: 34rem;
+  font-family: theme("fontFamily.display");
+  font-size: 1.08rem;
+  font-style: italic;
+  line-height: 1.55;
+  color: var(--sepia);
+}
+
+@keyframes method-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.method-enter {
+  animation: method-rise 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
 /* Prefer Indic webfonts when the document language is set. */
 html[data-lang="hi"] body,
 html[data-lang="mr"] body,
