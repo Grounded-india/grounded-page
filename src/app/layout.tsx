@@ -99,7 +99,7 @@ export const metadata: Metadata = {
     description: `${SITE_TAGLINE} Autonomous, source-cited, auditable news for India. Every claim, a citation.`,
     images: [
       {
-        url: "/og.png",
+        url: "/og.png?v=2",
         width: 1200,
         height: 630,
         alt: `${SITE_NAME} — fact-grounded daily for India`,
@@ -110,7 +110,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} — The Fact-Grounded Daily`,
     description: `${SITE_TAGLINE} Source-cited news for India.`,
-    images: ["/og.png"],
+    images: ["/og.png?v=2"],
   },
   robots: {
     index: true,
