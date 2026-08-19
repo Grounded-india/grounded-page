@@ -1,10 +1,10 @@
 /**
  * Canonical site constants used by metadata, sitemap, and JSON-LD.
  * Override at build time with NEXT_PUBLIC_SITE_URL if the live host differs
- * from grounded.news (e.g. a *.vercel.app preview).
+ * (e.g. a *.vercel.app preview).
  */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://grounded.news"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.thegroundedtimes.info"
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "The Grounded Times";

@@ -45,7 +45,7 @@ export function generateMetadata(): Metadata {
       url: "/",
       images: [
         {
-          url: "/og.png?v=2",
+          url: "/og.png?v=3",
           width: 1200,
           height: 630,
           alt: `${SITE_NAME} — fact-grounded daily for India`,
@@ -56,7 +56,7 @@ export function generateMetadata(): Metadata {
       card: "summary_large_image",
       title: `${SITE_NAME} — ${edition.humanDate}`,
       description,
-      images: ["/og.png?v=2"],
+      images: ["/og.png?v=3"],
     },
   };
 }
