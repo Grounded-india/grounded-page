@@ -16,6 +16,7 @@ import {
   SITE_KEYWORDS,
   SITE_NAME,
   SITE_TAGLINE,
+  OG_IMAGE,
   SITE_URL,
 } from "@/lib/site";
 
@@ -99,10 +100,11 @@ export const metadata: Metadata = {
     description: `${SITE_TAGLINE} Autonomous, source-cited, auditable news for India. Every claim, a citation.`,
     images: [
       {
-        url: "/og.png?v=3",
-        width: 1200,
-        height: 630,
-        alt: `${SITE_NAME} — fact-grounded daily for India`,
+        url: OG_IMAGE.url,
+        width: OG_IMAGE.width,
+        height: OG_IMAGE.height,
+        type: OG_IMAGE.type,
+        alt: OG_IMAGE.alt,
       },
     ],
   },
@@ -110,7 +112,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} — The Fact-Grounded Daily`,
     description: `${SITE_TAGLINE} Source-cited news for India.`,
-    images: ["/og.png?v=3"],
+    images: [OG_IMAGE.url],
   },
   robots: {
     index: true,

@@ -7,6 +7,15 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.thegroundedtimes.info"
 ).replace(/\/$/, "");
 
+/** Absolute share-card image. JPEG, no query string — WhatsApp is picky. */
+export const OG_IMAGE = {
+  url: "/og.jpg",
+  width: 1200,
+  height: 630,
+  type: "image/jpeg",
+  alt: "The Grounded Times — fact-grounded daily for India",
+} as const;
+
 export const SITE_NAME = "The Grounded Times";
 export const SITE_TAGLINE = "Someone has to keep you grounded.";
 export const SITE_DESCRIPTION =

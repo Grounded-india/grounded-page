@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getIssueNumber, getLatestEdition, langSwitcherFor } from "@/lib/editions";
 import { storyLede } from "@/lib/content";
 import { DEFAULT_LANG } from "@/lib/i18n";
-import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import { OG_IMAGE, SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 import { t } from "@/lib/ui-i18n";
 import { Masthead } from "@/components/Masthead";
 import { FrontPage } from "@/components/FrontPage";
